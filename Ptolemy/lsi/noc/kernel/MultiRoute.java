@@ -1,0 +1,58 @@
+package lsi.noc.kernel;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+
+//
+//This class represents multiple routes between a set of sources and 
+//a set of destinations.
+//It's the implementation of a composite pattern, so that a set 
+//of routes can be treated as a route (intersection, hopcount, etc.)
+//It is formed by the original route (denoted by its superclass, which 
+//links are stored by the List <i>links</i>) and all routes stored 
+//within the List <i>routes</i>.
+
+public class MultiRoute extends Route {
+
+	protected ArrayList<Route> routes;
+
+	public MultiRoute(Interconnect net) {
+		super(net);
+		routes = new ArrayList<Route>();
+
+	}
+
+	public MultiRoute() {
+		super();
+		routes = new ArrayList<Route>();
+
+	}
+
+	// Overrides the superclass method and returns the sum of the hop count of
+	// all routes that are part of this multiroute.
+	public int getHopCount() {
+
+		int count = links.size();
+
+		for (int i = 0; i < routes.size(); i++) {
+
+			count = count + routes.get(i).getHopCount();
+		}
+
+		return count;
+	}
+
+	// Overrides the superclass method and returns the links of
+	// all routes that are part of this multiroute.
+	public ArrayList<Link> getLinks() {
+
+		ArrayList<Link> alllinks = new ArrayList<Link>(links);
+		for (int i = 0; i < routes.size(); i++) {
+
+			alllinks.addAll(routes.get(i).getLinks());
+		}
+
+		return alllinks;
+	}
+
+}

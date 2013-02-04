@@ -1,0 +1,533 @@
+/* A SDirector governs the execution of an UML Sequence Diagram 
+ * implemented as a CompositeActor.
+
+ */
+package ptolemy.domains.uml.kernel;
+
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Vector;
+
+
+import ptolemy.actor.*;
+import ptolemy.actor.util.Time;
+import ptolemy.data.Token;
+import ptolemy.kernel.CompositeEntity;
+import ptolemy.kernel.util.Attribute;
+import ptolemy.kernel.util.IllegalActionException;
+import ptolemy.kernel.util.InternalErrorException;
+import ptolemy.kernel.util.NameDuplicationException;
+import ptolemy.kernel.util.Nameable;
+import ptolemy.kernel.util.NamedObj;
+import ptolemy.kernel.util.Settable;
+import ptolemy.kernel.util.Workspace;
+import ptolemy.vergil.uml.MessageOccurrenceSpecification;
+import ptolemy.vergil.uml.UMLSeqActor;
+import ptolemy.vergil.uml.Lifeline;
+import ptolemy.vergil.uml.BehavioralPatternPort;
+import ptolemy.vergil.uml.Message;
+import ptolemy.domains.uml.kernel.*;
+import ptolemy.domains.uml.lib.*;
+
+
+
+////SDDirector
+
+/**
+
+ @author Leandro Soares Indrusiak
+ @version $Id: SDDirector.java,v 1.0 2006/12/28 19:40:50
+ @version $Id: SDDirector.java,v 1.1 2007/04/11 07:20:22
+
+ */
+public abstract class SDDirector extends ptolemy.actor.Director {
+	/** Construct a director in the default workspace with an empty string
+	 *  as its name. The director is added to the list of objects in
+	 *  the workspace. Increment the version number of the workspace.
+	 */
+	public SDDirector() {
+		super();
+
+	}
+
+	/** Construct a director in the given container with the given name.
+	 *  The container argument must not be null, or a
+	 *  NullPointerException will be thrown.
+	 *  If the name argument is null, then the name is set to the
+	 *  empty string. Increment the version number of the workspace.
+	 *  Create the timeResolution parameter.
+	 *
+	 *  @param container The container.
+	 *  @param name The name of this director.
+	 *  @exception IllegalActionException If the name has a period in it, or
+	 *   the director is not compatible with the specified container, or if
+	 *   the time resolution parameter is malformed.
+	 *  @exception NameDuplicationException If the container already contains
+	 *   an entity with the specified name.
+	 */
+	public SDDirector(CompositeEntity container, String name)
+	throws IllegalActionException, NameDuplicationException {
+		super(container, name);
+
+	}
+
+	/** Construct a director in the workspace with an empty name.
+	 *  The director is added to the list of objects in the workspace.
+	 *  Increment the version number of the workspace.
+	 *  @param workspace The workspace of this object.
+	 */
+	public SDDirector(Workspace workspace) {
+		super(workspace);
+
+	}
+
+
+	///////////////////////////////////////////////////////////////////
+	////                         public methods                    ////
+
+
+	/** Iterate all the deeply contained actors of the
+	 *  container of this director exactly once. This method is not functional,
+	 *  since an iteration of the deeply contained actors may change
+	 *  state in their postfire() method. The actors are iterated
+	 *  in the order that they appear on the list returned by deepEntityList(),
+	 *  which is normally the order in which they were created.
+	 *  <p>
+	 *  This method is <i>not</i> synchronized on the workspace, so the
+	 *  caller should be.
+	 *  <p>
+	 *  In this base class, an attempt is made to fire each actor exactly
+	 *  once, in the order they were created.  Prefire is called once, and
+	 *  if prefire returns true, then fire is called once, followed by
+	 *  postfire.  The return value from postfire is ignored. If the
+	 *  container is not an instance of CompositeActor, however, then
+	 *  this method does nothing.
+	 *
+	 *  @exception IllegalActionException If any called method of one
+	 *  of the associated actors throws it.
+	 */
+	public void fire() throws IllegalActionException {
+		
+		Nameable container = getContainer();
+
+		if (container instanceof CompositeActor) {
+			Iterator actors = ((CompositeActor) container).deepEntityList()
+			.iterator();
+			int iterationCount = 1;
+
+			while (actors.hasNext() && !_stopRequested) {
+				Actor actor = (Actor) actors.next();
+
+				if (_debugging) {
+					_debug(new FiringEvent(this, actor,
+							FiringEvent.BEFORE_ITERATE, iterationCount));
+				}
+
+				if (actor.iterate(1) == Actor.STOP_ITERATING) {
+					if (_debugging) {
+						_debug("Actor requests halt: "
+								+ ((Nameable) actor).getFullName());
+					}
+
+					break;
+				}
+
+				if (_debugging) {
+					_debug(new FiringEvent(this, actor,
+							FiringEvent.AFTER_ITERATE, iterationCount));
+				}
+			}
+		}
+		
+	}
+
+
+
+
+	/** Initialize the model controlled by this director.  Set the
+	 *  current time to the start time or the current time of the
+	 *  executive director, and then invoke the initialize() method
+	 *  of this director on each actor that is controlled by this director.
+	 *  If the container is not an instance of CompositeActor, do nothing.
+	 *
+	 *  This method should typically be invoked once per execution, after the
+	 *  preinitialization phase, but before any iteration.  It may be
+	 *  invoked in the middle of an execution, if reinitialization is
+	 *  desired.  Since type resolution has been completed and the
+	 *  current time is set, the initialize() method of a contained
+	 *  actor may produce output or schedule events.  If stop() is
+	 *  called during this methods execution, then stop initializing
+	 *  actors immediately.
+	 *
+	 *  This method is <i>not</i> synchronized on the workspace,
+	 *  so the caller should be.
+	 *
+	 *  @exception IllegalActionException If the initialize() method of
+	 *   one of the associated actors throws it.
+	 */
+	public void initialize() throws IllegalActionException {
+		if (_debugging) {
+			_debug("Called initialize().");
+		}
+		super.initialize();
+		createPrecedenceGraph();
+		
+
+	}
+
+
+	public abstract void createPrecedenceGraph();
+	        	
+	
+	/** Indicate that resolved types in the model may no longer be valid.
+	 *  This will force type resolution to be redone on the next iteration.
+	 *  This method simply defers to the manager, notifying it.  If there
+	 *  is no container, or the container is not an instance of
+	 *  CompositeActor, or if it has no manager, do nothing.
+	 */
+	public void invalidateResolvedTypes() {
+		    Nameable container = getContainer();
+
+        if (container instanceof CompositeActor) {
+            Manager manager = ((CompositeActor) container).getManager();
+
+            if (manager != null) {
+                manager.invalidateResolvedTypes();
+            }
+        }
+		   
+	}
+
+
+
+	/** Return a new receiver of a type compatible with this director.
+	 *  In this base class, this returns an instance of Mailbox.
+	 *  @return A new Mailbox.
+	 */
+	public Receiver newReceiver() {
+		//return new Mailbox();
+		return new DebuggableQueueReceiver();
+		
+
+	}
+
+	/** Validate the attributes and then invoke the preinitialize()
+	 *  methods of all its deeply contained actors.
+	 *  This method is invoked once per execution, before any
+	 *  iteration, and before the initialize() method.
+	 *  Time is not set during this stage. So preinitialize() method
+	 *  of actors should not make use of time. They should wait
+	 *  until the initialize phase of the execution.
+	 *  <p>This method also resets the protected variable _stopRequested
+	 *  to false, so if a derived class overrides this method, then it
+	 *  should also do that.
+	 *  <p>This method is <i>not</i> synchronized on the workspace, so the
+	 *  caller should be.
+	 *
+	 *  @exception IllegalActionException If the preinitialize() method of
+	 *   one of the associated actors throws it.
+	 */
+	public void preinitialize() throws IllegalActionException {
+		if (_debugging) {
+			_debug(getFullName(), "Preinitializing ...");
+		}
+		
+		
+
+		// validate all settable attributes.
+		Iterator attributes = attributeList(Settable.class).iterator();
+		while (attributes.hasNext()) {
+			Settable attribute = (Settable) attributes.next();
+			attribute.validate();
+		}
+		// preinitialize protected variables.
+		_currentTime = getModelStartTime();
+		_stopRequested = false;
+		// preinitialize all the contained actors.
+		Nameable container = getContainer();
+		if (container instanceof CompositeActor) {
+			Iterator actors = ((CompositeActor) container).deepEntityList()
+			.iterator();
+			while (actors.hasNext()) {
+				Actor actor = (Actor) actors.next();
+				if (_debugging) {
+					_debug("Invoking preinitialize(): ", ((NamedObj) actor)
+							.getFullName());
+				}
+				actor.preinitialize();
+			}
+		}
+		
+		
+		if (_debugging) {
+			_debug(getFullName(), "Finished preinitialize().");
+		}
+	}
+
+
+
+
+	/** Transfer data from an input port of the container to the ports
+	 *  it is connected to on the inside.  The implementation in this
+	 *  base class transfers at most one token.  Derived classes may override
+	 *  this method to transfer a domain-specific number of tokens.
+	 *
+	 *  @exception IllegalActionException If the port is not an opaque
+	 *   input port.
+	 *  @param port The port to transfer tokens from.
+	 *  @return True if at least one data token is transferred.
+	 */
+	public boolean transferInputs(IOPort port) throws IllegalActionException {
+				return _transferInputs(port);
+
+	}
+
+	/** Transfer data from an output port of the container to the
+	 *  ports it is connected to on the outside.  The implementation
+	 *  in this base class transfers at most
+	 *  one token, but derived classes may transfer more than one
+	 *  token.
+	 *  @exception IllegalActionException If the port is not an opaque
+	 *   output port.
+	 *  @param port The port to transfer tokens from.
+	 *  @return True if at least one data token is transferred.
+	 */
+	public boolean transferOutputs(IOPort port) throws IllegalActionException {
+		return _transferOutputs(port);
+	}
+
+	/** Invoke the wrapup() method of all the actors contained in the
+	 *  director's container.   In this base class wrapup() is called on the
+	 *  associated actors in the order of their creation.  If the container
+	 *  is not an instance of CompositeActor, then this method does nothing.
+	 *  <p>
+	 *  This method should be invoked once per execution.  None of the other
+	 *  action methods should be invoked after it in the execution.
+	 *  This method is <i>not</i> synchronized on the workspace, so the
+	 *  caller should be.
+	 *
+	 *  @exception IllegalActionException If the wrapup() method of
+	 *   one of the associated actors throws it.
+	 */
+	public void wrapup() throws IllegalActionException {
+		
+		Nameable container = getContainer();
+
+		if (container instanceof CompositeActor) {
+			Iterator actors = ((CompositeActor) container).deepEntityList()
+			.iterator();
+
+			while (actors.hasNext()) {
+				Actor actor = (Actor) actors.next();
+				actor.wrapup();
+			}
+		}
+		
+	}
+
+
+	
+	
+	///////////////////////////////////////////////////////////////////
+	////                         protected methods                 ////
+
+	/** Return a description of the object.  The level of detail depends
+	 *  on the argument, which is an or-ing of the static final constants
+	 *  defined in the NamedObj class.  Lines are indented according to
+	 *  to the level argument using the protected method _getIndentPrefix().
+	 *  Zero, one or two brackets can be specified to surround the returned
+	 *  description.  If one is specified it is the the leading bracket.
+	 *  This is used by derived classes that will append to the description.
+	 *  Those derived classes are responsible for the closing bracket.
+	 *  An argument other than 0, 1, or 2 is taken to be equivalent to 0.
+	 *  This method is read-synchronized on the workspace.
+	 *  @param detail The level of detail.
+	 *  @param indent The amount of indenting.
+	 *  @param bracket The number of surrounding brackets (0, 1, or 2).
+	 *  @return A description of the object.
+	 */
+	protected String _description(int detail, int indent, int bracket) {
+		try {
+			_workspace.getReadAccess();
+
+			String result;
+
+			if ((bracket == 1) || (bracket == 2)) {
+				result = super._description(detail, indent, 1);
+			} else {
+				result = super._description(detail, indent, 0);
+			}
+
+			// FIXME: Add director-specific information here, like
+			// what is the state of the director.
+			// if ((detail & FIXME) != 0 ) {
+			//  if (result.trim().length() > 0) {
+			//      result += " ";
+			//  }
+			//  result += "FIXME {\n";
+			//  result += _getIndentPrefix(indent) + "}";
+			// }
+			if (bracket == 2) {
+				result += "}";
+			}
+
+			return result;
+		} finally {
+			_workspace.doneReading();
+		}
+	}
+
+	/** Return true if this director is embedded inside an opaque composite
+	 *  actor contained by another composite actor.
+	 *  @return True if this directory is embedded inside an opaque composite
+	 *  actor contained by another composite actor.
+	 */
+	protected boolean _isEmbedded() {
+		return !_isTopLevel();
+	}
+
+	/** Return true if this is a top-level director.
+	 *  Parts of this method is read synchronized on the workspace.
+	 * @return True if this director is at the top-level.
+	 */
+	protected boolean _isTopLevel() {
+		NamedObj container = getContainer();
+
+		// NOTE: the container may not be a composite actor.
+		// For example, the container may be an entity as a library,
+		// where the director is already at the top level.
+		if (container instanceof CompositeActor) {
+			if (((CompositeActor) container).getExecutiveDirector() == null) {
+				return true;
+			} else {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	/** Transfer at most one data token from the given input port of
+	 *  the container to the ports it is connected to on the inside.
+	 *  This method delegates the operation to the IOPort, so that the
+	 *  subclass of IOPort, TypedIOPort, can override this method to
+	 *  perform run-time type conversion.
+	 *
+	 *  @exception IllegalActionException If the port is not an opaque
+	 *   input port.
+	 *  @param port The port to transfer tokens from.
+	 *  @return True if at least one data token is transferred.
+	 *  @see IOPort#transferInputs
+	 */
+	protected boolean _transferInputs(IOPort port)
+	throws IllegalActionException {
+            
+	    if (_debugging) {
+	        _debug("Calling transferInputs on port: " + port.getFullName());
+	    }
+
+	    if (!port.isInput() || !port.isOpaque()) {
+	        throw new IllegalActionException(this, port,
+	                "Attempted to transferInputs on a port is not an opaque"
+	                + "input port.");
+	    }
+
+	    boolean wasTransferred = false;
+
+	    for (int i = 0; i < port.getWidth(); i++) {
+            
+	        try {
+                   
+	            if (i < port.getWidthInside()) {
+                       
+	                if (port.hasToken(i)) {
+	                    Token t = port.get(i);
+	                   
+						
+	                    if (_debugging) {
+	                        _debug(getName(), "transferring input from "
+	                                + port.getName());
+	                    }
+	             
+	                    port.sendInside(i, t);
+	                    wasTransferred = true;
+	                }
+	            } else {
+	                // No inside connection to transfer tokens to.
+	                // In this case, consume one input token if there is one.
+	                if (_debugging) {
+	                    _debug(getName(), "Dropping single input from "
+	                            + port.getName());
+	                }
+                        
+	                if (port.hasToken(i)) {
+	                    port.get(i);
+	                }
+	            }
+	        } catch (NoTokenException ex) {
+	            // this shouldn't happen.
+	            throw new InternalErrorException(this, ex, null);
+	        }
+	    }
+
+	    return wasTransferred;
+	}
+
+       
+        
+	
+        
+	/** Transfer at most one data token from the given output port of
+	 *  the container to the ports it is connected to on the outside.
+	 *  @exception IllegalActionException If the port is not an opaque
+	 *   output port.
+	 *  @param port The port to transfer tokens from.
+	 *  @return True if the port has an inside token that was successfully
+	 *  transferred.  Otherwise return false (or throw an exception).
+	 *  
+	 */
+	protected boolean _transferOutputs(IOPort port)
+	throws IllegalActionException {
+
+	    boolean result = false;
+	    if (_debugging) {
+	        _debug("Calling transferOutputs on port: " + port.getFullName());
+	    }
+
+	    if (!port.isOutput() || !port.isOpaque()) {
+	        throw new IllegalActionException(this, port,
+	                "Attempted to transferOutputs on a port that "
+	                + "is not an opaque input port.");
+	    }
+
+	    for (int i = 0; i < port.getWidthInside(); i++) {
+	        try {
+	            if (port.hasTokenInside(i)) {
+	                Token t = port.getInside(i);
+                        
+	             	                
+	                if (_debugging) {
+	                    _debug(getName(), "transferring output from "
+	                            + port.getName());
+	                }
+	           
+	                port.send(i, t);
+	                result = true;
+                           
+	            }
+	        } catch (NoTokenException ex) {
+	            // this shouldn't happen.
+	            throw new InternalErrorException(this, ex, null);
+	        }
+	    }
+           
+	    return result;
+	}
+
+	
+	
+	
+	protected SDPrecedenceGraph _graph;
+       
+}

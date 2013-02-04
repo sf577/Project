@@ -1,0 +1,110 @@
+<!-- $Id: README.html,v 1.30.2.6 2007/02/05 01:34:08 cxh Exp $ -->
+<html>
+<head>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+<title>Code Generation</title>
+<link href="../../doc/default.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+<html>
+<h1>Code Generation</h1>
+This code generator is patterned after the Ptolemy Classic 
+code generator where actors have template files consisting
+of code blocks.  The code blocks are stitched together to create
+the resulting file.
+
+<ul>
+<li><a href="#Simple Demo">Simple Demo</a>
+<li><a href="#Invoking the code generator by hand">Invoking the code generator by hand</a>
+<li><a href="#Macro description">Macro description</a>
+<li><a href="#Limitations">Limitations</a>
+<li><a href="#FAQ">FAQ</a>
+<li><a href="../../doc/codegen.htm">Ptolemy II Design Doc Codegen Chapter</a>
+</ul>
+
+<h2><a name="Simple Demo">Simple Demo</a></h2>
+<ol>
+<li>
+Open <a href="demo/Ramp/RampDisplay.xml"><code>$PTII/ptolemy/codegen/Demo/Ramp/RampDisplay.xml</code></a>
+<li> Click on the StaticSchedulingCodeGeneratorIcon.
+<li> A dialog box will appear, click on "Generate"
+<li> The code will be generated, compiled, run and the results displayed.
+</ol>
+
+<a href="../configs/codegen/demos.htm">Other Codegen Demonstrations</a>
+
+<h2><a name="Limitations">Limitations</a></h2>
+This is a highly preliminary code generator facility, with many 
+limitations.  It is best viewed as a concept demonstration.
+
+<ul>
+<li> Only SDF, FSM and HDF domains are supported
+<li> Only IntToken, DoubleToken, StringToken and ArrayToken are supported.
+Other tokens are not supported at this time.
+<li> A limited number of actors have supporting helper code.
+The easiest way to build models that only the actors that have
+code generation support is to run
+<pre>
+$PTII/bin/vergil -codegen
+</pre>
+
+</ul>
+
+<h2><a name="FAQ">FAQ</a>
+<dl>
+<dt> Models that use a plotter fail to compile.
+<dd> Models that use the plotter use the Java Native Interface (JNI)
+to invoke the plotter from within the C process. This is done
+so that the plotter is interactive while the model is running
+as opposed to plotting the data after the model completes.
+The JNI facility requires that a Java Development Kit (JDK)
+be installed instead of a Java Runtime Environment (JRE).
+The Ptolemy II Windows installer includes a JRE which is optionally
+installed.  If the Windows installer is installed with the bunded
+JRE, then models that use the plotter will probably fail to compile
+with message like:
+<pre>
+make: *** [Ramp] Error 1
+</pre>
+
+<dt> Models that use the plotter require setup
+<dd> To properly run a model that has a plotter, you must have jvm.dll
+in your path.
+If you do not, then when you run the executable, it will immediately exit
+with no message!
+For example, place <pre>C:\Progra~1\Java\jdk1.5.0_11\jre\bin\client</pre>
+in your path.  If you are running Vergil from the command line as 
+$PTII/bin/ptinvoke, then this has been handled for you.
+If you are running via Eclipse, then you must update your path by hand.
+
+<dt> When in Windows, clicking on a .exe produced by the 
+code generator fails to start up.  The message is:
+ <br>  The procedure entry point _impure_ptr could not be located in
+  the dynamic link library cygwin1.dll
+<dd> The solution is to add <CODE>C:\cygwin\bin</CODE> to the
+Windows path by doing:
+<CODE>Start Menu </CODE> -&gt; <CODE>Settings</CODE> -&gt;
+<CODE>Control Panels</CODE> -&gt; <CODE>System</CODE> -&gt;
+<CODE>Advanced</CODE> -&gt; <CODE>Environment Variables</CODE>
+and adding <CODE>C:\cygwin\bin</CODE> to the path.
+ <br>To get rid of the console, compile with the exe with -mwindows:
+<pre>
+make -f <I>Model</I>.mk CC_FLAGS=-mwindows
+</pre>
+
+<dt> Generating code results in <code>IOException: java.io.IOException: CreateProcess: make -f <i>Model</i>.mk error=2</code>
+<dl> This will happen if <code>make</code> is not in your path.
+Under Windows, you may need to install Cygwin, see the
+<a
+href="http://ptolemy.eecs.berkeley.edu/ptolemyII/ptIIlatest/cygwin.htm">Ptolemy
+II Cygwin installer</a>.  Under Windows, if Cygwin is installed, then
+be sure that <code>C:\cygwin\bin</code> is in your Windows path.
+To edit your path, do <CODE>Start Menu </CODE> -&gt; <CODE>Settings</CODE> -&gt;
+<CODE>Control Panels</CODE> -&gt; <CODE>System</CODE> -&gt;
+<CODE>Advanced</CODE> -&gt; <CODE>Environment Variables</CODE>.
+
+</dl>
+
+
+</body>
+</html>

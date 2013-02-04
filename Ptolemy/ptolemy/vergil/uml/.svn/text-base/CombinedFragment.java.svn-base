@@ -1,0 +1,191 @@
+package ptolemy.vergil.uml;
+
+import ptolemy.actor.TypedIORelation;
+import ptolemy.data.expr.Parameter;
+import ptolemy.kernel.ComponentEntity;
+import ptolemy.kernel.util.IllegalActionException;
+import ptolemy.kernel.util.Location;
+import ptolemy.kernel.util.NameDuplicationException;
+import ptolemy.kernel.util.NamedObj;
+import ptolemy.kernel.util.StringAttribute;
+import ptolemy.moml.MoMLChangeRequest;
+
+import lsi.noc.application.CombinedFragmentPort;
+
+/**
+ * This class is an implementation of the class CombinedFragment specified in
+ * the UML Superstructure specification within the PtolemyII environment. 
+ * 
+ * This class is the starting point used in this implementation, this means
+ * that the whole underlying hierarchy that is given by the UML specification
+ * is simplified here. For example, InteractionFragment that is the super class
+ * of CombinedFragment is not implemented here.
+ * 
+ * A CombinedFragment contains an InteractionOperator that defines the semantics
+ * that are applied within the CombinedFragment. As its operands, 
+ * CombinedFragments contain the Messages that belong to them. Its graphical
+ * representation is given through a rectangle and therefore information about
+ * its location, height and width are made persistent in the model.
+ * 
+ * The InteractionOperand class is not implemented. This is because 
+ * InteractionOperands do only consist of one Message in this implementation
+ * and therefore InteractionOperands are implicitly created for every single 
+ * Message. 
+ * 
+ * @author Andreas Thuy, Modified by Sanna Maatta
+ * 
+ * last review: 28.08.06
+ */
+public class CombinedFragment extends Parameter {
+
+	// position of this CombFrag on the screen
+	private Location location = new Location(this, "location");
+	
+	// width of the CombFrag
+	private Parameter width = new Parameter(this, "width");
+	
+	// heigth of the CombFrag
+	private Parameter heigth = new Parameter(this, "heigth");
+	
+	// name of the InteractionOperator that defines the semantics
+	// of this CombFrag
+	private StringAttribute op = new StringAttribute(this, "op");
+	
+	
+	public CombinedFragment(NamedObj container, String name)
+	throws IllegalActionException, NameDuplicationException {
+		super(container, name);
+		
+		// the type of a CombinedFragment parameter is String
+		// information is only stored to recover the model that was created
+		// in an earlier session => Director won't complain about unknown
+		// names in the model
+		// !!! But there is actually no expression set for a CombFrag...
+		// !!! this is more to keep consistent with the other UML Parameters
+		
+		//???????????????????????????????????????
+		this.setStringMode(true);
+	}
+	
+	public CombinedFragment(NamedObj container, String name, double[] loc,
+			double[] widthHeigth, InteractionOperator iOp) 
+			throws IllegalActionException, NameDuplicationException {
+		this(container, name);
+		try {			
+			this.location.setLocation(loc);
+			this.width.setExpression(String.valueOf(widthHeigth[0]));
+			this.heigth.setExpression(String.valueOf(widthHeigth[1]));			
+			this.op.setExpression(iOp.getOperator());
+			
+		}
+		catch(IllegalActionException iAE) {
+			iAE.printStackTrace();
+		}
+		
+		// Input ports created for the loop, opt, and alt combined fragments
+		if (iOp.getOperator() == "loop" || iOp.getOperator() == "alt" || iOp.getOperator() == "opt") {
+		    createCFPorts_();    
+		}
+		
+		
+		
+	}
+
+	/**
+	 * @return - the heigth of the CombFrag
+	 */
+	public double getHeigth() {
+		return new Double(this.heigth.getExpression()).doubleValue();
+	}
+	
+	/**
+	 * @return - the location of the CombFrag, this is the center of the
+	 * rectangle
+	 */
+	public Location getLocation() {
+		return this.location;
+	}
+
+	/**
+	 * @return - the name of the InteractionOperator that is assigned to
+	 * the CombFrag
+	 */
+	public String getOp() {
+		return this.op.getExpression();
+	}
+
+	 /**
+         * New public method added by Sanna Maatta
+         * @return - the position of the Combined Fragment on the screen as a double table (x and y coordinates
+         * can be extracted easily)
+         */
+        
+        public double[] getFragmentLocation() {
+            return location.getLocation();
+        }
+	
+	/**
+	 * @return - the width of the CombFrag
+	 */
+	public double getWidth() {
+		return new Double(this.width.getExpression()).doubleValue();
+	}
+
+	public void setHeigth(double heigth) {
+		this.heigth.setExpression(String.valueOf(heigth));	
+	}
+
+	public void setXPos(double x) {
+		double[] newPos = {x, getLocation().getLocation()[1]};
+		try {
+			this.location.setLocation(newPos);
+		}
+		catch(IllegalActionException iAE) {
+			iAE.printStackTrace();
+		}
+		
+	}
+	
+	public void setWidth(double width) {
+		this.width.setExpression(String.valueOf(width));
+	}
+	
+	private void createCFPorts_(){
+            try{
+                    ComponentEntity patternholder= (ComponentEntity)getContainer();
+
+                    
+                    inputport_ = new CombinedFragmentPort(patternholder, getName()+"_input", true, false, this);
+                   
+                    
+                    String inputPortMoMLRep = 
+                            "<port name=\""+inputport_.getName()+ "\" class=\"lsi.noc.application.CombinedFragmentPort\">" +
+                "  <property name=\"input\"/>" + "  <property name=\"" + this.getName() + "\" class=\"ptolemy.vergil.uml.CombinedFragment\" />"+
+                "  <property name=\"_showName\" " + "class=\"ptolemy.data.expr.SingletonParameter\"" + " value=\"true\"/>" + 
+                "  <property name=\"_location\" " +  "class=\"ptolemy.kernel.util.Location\""+ " value=\"-10.0,-10.0\"/>"+ "</port>";
+                    
+
+                    
+                    MoMLChangeRequest request = new MoMLChangeRequest(this, patternholder, inputPortMoMLRep);
+                    patternholder.requestChange(request);
+                    //request = new MoMLChangeRequest(this, patternholder, outputPortMoMLRep);
+                    //patternholder.requestChange(request);
+                    
+                   
+                    
+                    this.addChangeListener(inputport_);
+                   
+            }
+            catch (NameDuplicationException nde){
+                    
+            }
+            catch (IllegalActionException iae){
+                    System.out.println("Illegal Action:" + iae.toString());
+            
+            }
+            
+    }
+
+	CombinedFragmentPort inputport_;
+	
+}

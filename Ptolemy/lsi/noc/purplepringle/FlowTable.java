@@ -1,0 +1,156 @@
+package lsi.noc.purplepringle;
+
+import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.SortedSet;
+import java.util.TreeSet;
+import java.util.Vector;
+
+import ptolemy.actor.util.Time;
+
+import lsi.noc.kernel.priority.PriorityTrafficFlow;
+
+public class FlowTable {
+
+	protected Vector<FlowTableEntry> flows;
+	protected FlowTableController ctrl;
+
+	public FlowTable(FlowTableController c) {
+
+		flows = new Vector<FlowTableEntry>();
+		ctrl = c;
+	}
+
+	public void addFlow(PriorityTrafficFlow flow, Time releaseTime,
+			Time remainingTime) {
+
+		// create new table entry for new traffic flow
+		FlowTableEntry newFlowEntry = new FlowTableEntry(flow, releaseTime);
+
+		PriorityTrafficFlow newFlow = newFlowEntry.getFlow();
+
+		// add remaining time to the flow entry
+		// this is calculated by the flow according to its route and the
+		// latencies per hop and per router
+		newFlowEntry.setRemainingTime(remainingTime);
+
+		// check whether new flow intersects with existing flows
+
+		Enumeration<FlowTableEntry> e = flows.elements();
+		while (e.hasMoreElements()) {
+
+			FlowTableEntry existingFlowEntry = e.nextElement();
+			PriorityTrafficFlow existingFlow = existingFlowEntry.getFlow();
+
+			boolean intersects = newFlow.getRoute().intersects(
+					existingFlow.getRoute());
+
+			if (intersects) {
+
+				// checks whether intersecting flows interfere on the new flow
+				// or suffer interference from it
+				// and add respective interference sources to table entries
+				if (existingFlow.getPriority() <= newFlow.getPriority()) {
+
+					newFlowEntry.addInterferenceSource(existingFlowEntry);
+
+				} else {
+
+					existingFlowEntry.addInterferenceSource(newFlowEntry);
+
+				}
+
+			}
+
+		}
+
+		// adds flow to the table
+		flows.add(newFlowEntry);
+
+	}
+
+	public void removeFlow(FlowTableEntry flow) {
+
+		// removes entry from flow table
+		flows.remove(flow);
+
+		// updates dependency lists of other flows
+		Enumeration<FlowTableEntry> e = flows.elements();
+		while (e.hasMoreElements()) {
+			FlowTableEntry entry = e.nextElement();
+			entry.removeInterferenceSource(flow);
+		}
+
+		ctrl.notifyFlowCompletion(flow.getFlow());
+
+	}
+
+	// should be called on each firing or flow creation, to update the flow
+	// table
+
+	public void update(Time currentTime) {
+
+		// creates a list of flows in decreasing order of priority
+		TreeSet<FlowTableEntry> orderedFlows = new TreeSet<FlowTableEntry>(
+				flows);
+
+		// iterate over that list, starting with higher priority flows
+		Iterator<FlowTableEntry> i = orderedFlows.descendingIterator();
+
+		while (i.hasNext()) {
+
+			FlowTableEntry fe = i.next();
+
+			// active flows
+			if (fe.isActive()) {
+
+				// checks whether current flow completed transmission
+				// if true, remove it from the main flow table
+
+				if (fe.getRemainingTime().compareTo(
+						currentTime.subtract(fe.getLastActivationTime())) != 1) {
+					removeFlow(fe);
+
+				}
+
+				// checks whether any of the interfering flows became active
+				// if true, update current flow as inactive and update its
+				// remaining time
+				Enumeration<FlowTableEntry> e = fe.getInterferenceFlows();
+				while (e.hasMoreElements()) {
+
+					if (e.nextElement().isActive()) {
+						fe.setInactive();
+						fe.setRemainingTime(fe.getRemainingTime()
+								.subtract(
+										currentTime.subtract(fe
+												.getLastActivationTime())));
+						break;
+					}
+
+				}
+			}
+
+			// inactive flows
+			else {
+
+				// checks whether all interfering flows became inactive (or
+				// terminated)
+				// if true, set current flow as active
+				Enumeration<FlowTableEntry> e = fe.getInterferenceFlows();
+				boolean allInactive = true;
+
+				while (e.hasMoreElements()) {
+					if (e.nextElement().isActive()) {
+						allInactive = false;
+					}
+				}
+				if (allInactive) {
+					fe.setActive(currentTime);
+					ctrl.addFiringRequest(fe.getRemainingTime());
+				}
+			}
+		}
+	}
+
+}

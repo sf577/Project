@@ -1,0 +1,113 @@
+//Copyright (c) 2008 Leandro Moller
+//All rights reserved.
+//Darmstadt, 29/10/2008.
+//Version 2.0
+
+package lsi.noc.nocscope2;
+
+import javax.swing.JFrame;
+import ptolemy.kernel.CompositeEntity;
+import ptolemy.kernel.util.IllegalActionException;
+import ptolemy.kernel.util.NameDuplicationException;
+import java.awt.Color;
+
+public class HotSpotScopeActor extends NoCScopeActor {
+
+	private int biggestValue, biggestX, biggestY;
+
+	public HotSpotScopeActor(CompositeEntity container, String name)
+			throws NameDuplicationException, IllegalActionException {
+		super(container, name);
+		_frame = new JFrame("HotSpotScope");
+	}
+
+	public void initialize() throws IllegalActionException {
+		super.initialize();
+		for (int i = 0; i < getXDimension(); i++)
+			for (int j = 0; j < getYDimension(); j++) {
+				((HotSpotScope) _nocscope).getSwitch(i, j).setMinColor(
+						Color.blue);
+				((HotSpotScope) _nocscope).getSwitch(i, j).setMaxColor(
+						Color.red);
+			}
+	}
+
+	public void paint(int x, int y, int e, int w, int n, int s, int l) {
+		// get the biggest value of this XY router
+		setBiggestLocalValue(x, y, e, w, n, s, l);
+		// get the biggest value of the NoC
+		biggestValue = getBiggestGlobalValue();
+		// use the biggest value as reference to the color to be painted
+		((HotSpotScope) _nocscope).getSwitch(x, y).setMaxSize(biggestValue);
+		// set the value of the ports
+		((HotSpotScope) _nocscope).getSwitch(x, y).setEast(e);
+		((HotSpotScope) _nocscope).getSwitch(x, y).setWest(w);
+		((HotSpotScope) _nocscope).getSwitch(x, y).setNorth(n);
+		((HotSpotScope) _nocscope).getSwitch(x, y).setSouth(s);
+		((HotSpotScope) _nocscope).getSwitch(x, y).setLocal(l);
+		// paint the scope
+		_nocscope.repaint();
+	}
+
+	public void setBiggestLocalValue(int x, int y, int e, int w, int n, int s,
+			int l) {
+		int value = e;
+		((HotSpotScope) _nocscope).getSwitch(x, y).setBigValue(value);
+		((HotSpotScope) _nocscope).getSwitch(x, y).setBigPort(0);
+		if (value < w) {
+			value = w;
+			((HotSpotScope) _nocscope).getSwitch(x, y).setBigValue(value);
+			((HotSpotScope) _nocscope).getSwitch(x, y).setBigPort(1);
+		}
+		if (value < n) {
+			value = n;
+			((HotSpotScope) _nocscope).getSwitch(x, y).setBigValue(value);
+			((HotSpotScope) _nocscope).getSwitch(x, y).setBigPort(2);
+		}
+		if (value < s) {
+			value = s;
+			((HotSpotScope) _nocscope).getSwitch(x, y).setBigValue(value);
+			((HotSpotScope) _nocscope).getSwitch(x, y).setBigPort(3);
+		}
+		if (value < l) {
+			value = l;
+			((HotSpotScope) _nocscope).getSwitch(x, y).setBigValue(value);
+			((HotSpotScope) _nocscope).getSwitch(x, y).setBigPort(4);
+		}
+		if (value == 0) {
+			((HotSpotScope) _nocscope).getSwitch(x, y).setBigValue(1);
+			((HotSpotScope) _nocscope).getSwitch(x, y).setBigPort(0);
+		}
+	}
+
+	public int getBiggestGlobalValue() {
+		int biggest = 1;
+		for (int i = 0; i < getXDimension(); i++)
+			for (int j = 0; j < getYDimension(); j++)
+				if (biggest < ((HotSpotScope) _nocscope).getSwitch(i, j)
+						.getBigValue()) {
+					biggest = ((HotSpotScope) _nocscope).getSwitch(i, j)
+							.getBigValue();
+					biggestX = i;
+					biggestY = j;
+				}
+		return biggest;
+	}
+
+	public int getBiggestGlobalX() {
+		return biggestX;
+	}
+
+	public int getBiggestGlobalY() {
+		return biggestY;
+	}
+
+	public BufferSwitch getSwitch(int x, int y) {
+		return ((HotSpotScope) _nocscope).getSwitch(x, y);
+	}
+
+	public NoCScope createScope() {
+		return new HotSpotScope(getXDimension(), getYDimension());
+	}
+
+}

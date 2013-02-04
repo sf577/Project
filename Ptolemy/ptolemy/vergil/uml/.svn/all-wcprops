@@ -1,0 +1,305 @@
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml
+END
+UMLSeqActor.java
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml/UMLSeqActor.java
+END
+UMLEditorDropTarget.java
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml/UMLEditorDropTarget.java
+END
+syncMessage2.jpg
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml/syncMessage2.jpg
+END
+CombinedFragment.java
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml/CombinedFragment.java
+END
+UMLTreeCellRenderer.java
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml/UMLTreeCellRenderer.java
+END
+GeneralOrdering.java
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml/GeneralOrdering.java
+END
+UMLFrame.java
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml/UMLFrame.java
+END
+LifelineSite.java
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml/LifelineSite.java
+END
+SpecialArrowhead.java
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml/SpecialArrowhead.java
+END
+LifelineIcon.xml
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml/LifelineIcon.xml
+END
+BehavioralPatternPort.java
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml/BehavioralPatternPort.java
+END
+Event.java
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml/Event.java
+END
+CombFragFigure.java
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml/CombFragFigure.java
+END
+UMLTableauFactory.java
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml/UMLTableauFactory.java
+END
+Message.java
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml/Message.java
+END
+ReceiveEvent.java
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml/ReceiveEvent.java
+END
+Lifeline.jpg
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml/Lifeline.jpg
+END
+PhysicalConnector.java
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml/PhysicalConnector.java
+END
+OccurrenceSpecification.java
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml/OccurrenceSpecification.java
+END
+Lifeline.original.jpg
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml/Lifeline.original.jpg
+END
+UMLTableau.java
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml/UMLTableau.java
+END
+MessageSort.java
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml/MessageSort.java
+END
+CombFragManipulator.java
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml/CombFragManipulator.java
+END
+EdgeDragInteractor.java
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml/EdgeDragInteractor.java
+END
+UMLRenameDialogFactory.java
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml/UMLRenameDialogFactory.java
+END
+NamedElement.java
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml/NamedElement.java
+END
+UMLParameter.java
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml/UMLParameter.java
+END
+MessageConnector.java
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml/MessageConnector.java
+END
+LifelineIcon.java
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml/LifelineIcon.java
+END
+UMLGraphModel.java
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml/UMLGraphModel.java
+END
+LifelineNodeController.java
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml/LifelineNodeController.java
+END
+CheckerState.java
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml/CheckerState.java
+END
+UMLRenameDialog.java
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml/UMLRenameDialog.java
+END
+LifelineHighlighter.java
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml/LifelineHighlighter.java
+END
+UMLRenameConfigurer.java
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml/UMLRenameConfigurer.java
+END
+MessageEnd.java
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml/MessageEnd.java
+END
+Lifeline.gif
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml/Lifeline.gif
+END
+Interaction.java
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml/Interaction.java
+END
+CombFragNodeInteractor.java
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml/CombFragNodeInteractor.java
+END
+Par.java
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml/Par.java
+END
+UMLGraphController.java
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml/UMLGraphController.java
+END
+MessageEvent.java
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml/MessageEvent.java
+END
+Lifeline.java
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml/Lifeline.java
+END
+MessageController.java
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml/MessageController.java
+END
+LifelineFigure.java
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml/LifelineFigure.java
+END
+CombFragNodeController.java
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml/CombFragNodeController.java
+END
+InteractionOperator.java
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml/InteractionOperator.java
+END
+SendEvent.java
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml/SendEvent.java
+END
+ArrowheadWithRectangle.java
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml/ArrowheadWithRectangle.java
+END
+MessageOccurrenceSpecification.java
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/svn/NoC/!svn/ver/466/release2011/ptolemy/vergil/uml/MessageOccurrenceSpecification.java
+END

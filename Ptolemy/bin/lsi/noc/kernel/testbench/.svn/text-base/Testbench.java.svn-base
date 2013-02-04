@@ -1,0 +1,192 @@
+package lsi.noc.kernel.testbench;
+
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Point;
+import java.util.ArrayList;
+
+import javax.swing.JFrame;
+
+import org.apache.commons.collections15.Transformer;
+
+import edu.uci.ics.jung.algorithms.layout.CircleLayout;
+import edu.uci.ics.jung.algorithms.layout.FRLayout;
+import edu.uci.ics.jung.algorithms.layout.ISOMLayout;
+import edu.uci.ics.jung.algorithms.layout.KKLayout;
+import edu.uci.ics.jung.algorithms.layout.Layout;
+import edu.uci.ics.jung.algorithms.layout.SpringLayout;
+import edu.uci.ics.jung.graph.DirectedSparseGraph;
+import edu.uci.ics.jung.visualization.BasicVisualizationServer;
+import lsi.noc.kernel.Mesh2DNoC;
+import lsi.noc.kernel.Mesh2DXYRouting;
+import lsi.noc.kernel.Platform;
+import lsi.noc.kernel.Task;
+import lsi.noc.kernel.priority.PriorityApplicationModel;
+import lsi.noc.kernel.priority.PriorityTrafficFlow;
+import lsi.noc.kernel.visualisation.RouteViewer;
+
+public class Testbench extends Thread {
+
+	
+	PriorityApplicationModel app;
+	Platform plat;
+	int x, y;
+	double trav, rout;
+
+	Mesh2DNoC network;
+	Mesh2DXYRouting routingalgorithm;
+	RouteViewer panel;
+	String title;
+
+	
+	
+	
+	public void setTitle(String t){title=t;}
+	
+	
+	public void displayRoutes(String st){
+
+		JFrame frame = new JFrame(st);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+		panel = new RouteViewer();
+		frame.getContentPane().add(panel, BorderLayout.CENTER);
+		frame.setMinimumSize(new Dimension(1200, 800));
+		panel.setLabels(true);
+		panel.setHopdistance(50);
+		panel.setOrigin(new Point(40,40));
+
+		frame.pack();
+		frame.setVisible(true);
+
+
+		for (int i=0;i<app.getFlows().size();i++){
+
+			PriorityTrafficFlow flow = app.getFlows().get(i);
+			panel.addRoute(flow.getRoute());
+			panel.repaint();			
+
+		}
+
+	}
+
+	
+	public void displayApplicationGraph(String title){
+		
+		//create a directed graph
+		DirectedSparseGraph appgraph = new DirectedSparseGraph<Task,String>();
+		
+		
+		//add all tasks to the graph as vertexes
+		for(int i=0;i<app.getTasks().size();i++){
+			appgraph.addVertex(app.getTasks().get(i));
+		}
+		
+		//create edges between communicating tasks
+		
+		for(int i=0;i<app.getFlows().size();i++){
+
+			PriorityTrafficFlow flowi = app.getFlows().get(i);
+			Task src = flowi.getSender();
+			Task dst = flowi.getReceiver();
+			appgraph.addEdge(i+" "+flowi.getVolume(), src,dst);
+		}
+
+		
+		
+		// The Layout<V, E> is parameterized by the vertex and edge types
+//		Layout<Task, String> layout = new ISOMLayout(appgraph);
+//		Layout<Task, String> layout = new CircleLayout(appgraph);
+//		Layout<Task, String> layout = new KKLayout(appgraph);
+//		Layout<Task, String> layout = new FRLayout(appgraph);
+
+		Layout<Task, String> layout = new SpringLayout(appgraph);
+
+
+		
+		layout.setSize(new Dimension(900,900)); // sets the initial size of the space
+		// The BasicVisualizationServer<V,E> is parameterized by the edge types
+		BasicVisualizationServer<Task,String> vv =
+			new BasicVisualizationServer<Task,String>(layout);
+		vv.setPreferredSize(new Dimension(1850,950)); //Sets the viewing area size
+
+		Transformer<Task,String> labeler = new Transformer<Task,String>() {
+			public String transform(Task v){
+				return v.getName();
+			}
+		};
+		
+		vv.getRenderContext().setVertexLabelTransformer(labeler);	
+		
+		JFrame frame = new JFrame(title);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.getContentPane().add(vv);
+		frame.pack();
+		frame.setVisible(true);
+
+
+		
+		
+		
+	}
+	
+	public void report(){
+
+		System.out.println("----- Tasks ------");
+		for(int i=0;i<app.getTasks().size();i++){
+			String name = app.getTasks().get(i).getName();
+			String corecode = app.getTasks().get(i).getCore().toString();
+
+			double wcet = app.getTasks().get(i).getResponseTime(app.getTasks().get(i).getInterferenceSet(app.getTasks()));
+			System.out.println(i+","+name+","+corecode+","+wcet+" "+app.getTasks().get(i).getCompTime());
+			if(wcet>app.getTasks().get(i).getDeadline())System.out.println(name+" NOT SCHEDULABLE");
+
+		}
+		System.out.println("----- Flows ------");
+		
+		for(int i=0;i<app.getFlows().size();i++){
+
+			int dir=(app.getFlows().get(i).getDirectInterferenceSet(app.getFlows())).size();
+			int indir=(app.getFlows().get(i).getIndirectInterferenceSet(app.getFlows())).size();
+			double latency = app.getFlows().get(i).getBasicLatency(trav,rout);
+			double dwclatency = app.getFlows().get(i).getDirectInterferenceWorstCaseLatency(trav,rout,app.getFlows());
+			double wclatency = app.getFlows().get(i).getWorstCaseLatency(trav,rout,app.getFlows());			
+
+			
+			String source = app.getFlows().get(i).getSourceTask().getName();
+			String dest = app.getFlows().get(i).getDestinationTask().getName();
+			
+			System.out.println(wclatency);
+			
+
+			
+			
+			if(wclatency>app.getFlows().get(i).getPeriod()){
+				System.out.println("DEADLINE MISSED!");
+			}
+
+		}
+		System.out.println("-----------");
+
+		System.out.println("-----Mapping------");
+
+		for(int i=0;i<x;i++){
+			for(int j=0;j<y;j++){
+				String l = "Core "+i+" "+j+" - Tasks: ";
+				ArrayList<Task> list = network.getCore(i, j).getTasks();
+				for(int k=0;k<list.size();k++){
+					
+					l = l + list.get(k).getName() + ", ";
+					
+				}
+				System.out.println(l);
+			}
+		}
+		
+		
+	}
+
+
+	
+	
+}

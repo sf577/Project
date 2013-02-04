@@ -1,0 +1,766 @@
+package ptolemy.vergil.uml;
+
+import java.awt.Image;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
+import java.awt.geom.Point2D;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.Iterator;
+import java.util.List;
+
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JMenu;
+import javax.swing.JToggleButton;
+import javax.swing.JToolBar;
+
+import ptolemy.kernel.util.ChangeListener;
+import ptolemy.kernel.util.ChangeRequest;
+import ptolemy.kernel.util.IllegalActionException;
+import ptolemy.kernel.util.Location;
+import ptolemy.kernel.Port;
+import ptolemy.kernel.util.NameDuplicationException;
+import ptolemy.kernel.util.NamedObj;
+import ptolemy.kernel.util.Settable;
+import ptolemy.kernel.util.ValueListener;
+import ptolemy.vergil.actor.ExternalIOPortController;
+import ptolemy.vergil.basic.LocatableNodeDragInteractor;
+import ptolemy.vergil.basic.WithIconGraphController;
+import ptolemy.vergil.actor.ActorViewerGraphController;
+import ptolemy.vergil.basic.WithIconGraphController.NewPortAction;
+import ptolemy.vergil.kernel.AttributeController;
+import ptolemy.vergil.toolbox.FigureAction;
+import diva.canvas.Figure;
+import diva.canvas.FigureLayer;
+import diva.canvas.Site;
+import diva.canvas.connector.AutonomousSite;
+import diva.canvas.connector.Connector;
+import diva.canvas.connector.ConnectorManipulator;
+import diva.canvas.event.LayerEvent;
+import diva.canvas.event.MouseFilter;
+import diva.canvas.interactor.AbstractInteractor;
+import diva.canvas.interactor.CompositeInteractor;
+import diva.canvas.interactor.GrabHandle;
+import diva.canvas.interactor.Interactor;
+import diva.canvas.interactor.SelectionDragger;
+import diva.canvas.interactor.SelectionModel;
+import diva.graph.EdgeController;
+import diva.graph.GraphEvent;
+import diva.graph.NodeController;
+import diva.gui.GUIUtilities;
+
+import lsi.noc.application.Loop;
+import lsi.noc.application.Opt;
+import lsi.noc.application.Alt;
+
+/**
+ * This is the master controller that handles interaction in a UML SD Editor. 
+ * Respective controllers for Lifeline nodes and Message edges are assigned.
+ * The handling of the configuration is taken from the base class 
+ * BasicGraphController. Specific actions like the creation of Messages are
+ * defined here and the GUI is customized for the needs of this editor, this
+ * means that the toolbar is created accordingly.
+ * 
+ * @author Andreas Thuy, Leandro Soares Indrusiak, Modified by Sanna Maatta
+ * Added buttons for loop, alt, and opt combined fragments
+ * 
+ * last review: 29.12.2006
+ */
+public class UMLGraphController extends ActorViewerGraphController 
+		implements ChangeListener, ValueListener {
+		
+	/**
+	 * This action is responsible for the creation of a CombinedFragment when
+	 * someone will click on the according button in the toolbar.
+	 * 
+	 * => implements the ActionListener Interface
+	 * 
+	 * The width of the CombinedFragment depends on the most left and most
+	 * right Lifeline on the screen.
+	 * 
+	 * @author Andreas Thuy
+	 *
+	 */
+	public class CreateCombFragAction extends AbstractAction {
+
+		public CreateCombFragAction() {
+			super();			
+		}
+
+		/**
+		 * Create the action (not a CombinedFragment).
+		 * 
+		 * @param buttonText - this String will appear on the button that
+		 * is associated with this action.
+		 */
+		public CreateCombFragAction(String buttonText) {
+			super(buttonText);			
+		}
+
+// TODO after 'intelligent' changes (08.09.06), lifelines are no longer centered 
+		//witht he CombinedFragment...
+		/** 
+		 * Called when someone 'activates' this action.
+		 * A CombinedFragment will be created and added to the Ptolemy-model.
+		 * 
+		 * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+		 */
+		public void actionPerformed(ActionEvent event) {									
+			if(getGraphModel().getRoot() instanceof NamedObj) {
+				// will become the container of the new CombinedFragment
+				NamedObj rootModel = (NamedObj)getGraphModel().getRoot();
+						
+				String combFragName = rootModel.uniqueName("combFragment");
+			
+				// calculate width of the CombinedFragment so that it
+				// includes all the lifelines from left to right
+				List lifelines = ((NamedObj)UMLGraphController.this.
+						getGraphModel().getRoot()).attributeList(
+						Lifeline.class);
+				
+				// the x-coordinate of the Lifeline on the most-left 
+				double leftX = 0;
+				// the x-coordinate of the Lifeline on the most-right
+				double rightX = 0;
+				// the x-coordinate of the CombinedFragment				
+				double x = 0;
+				// the width of the CombinedFragment
+				double width = 0;
+				
+				if(lifelines != null) {
+					if(!lifelines.isEmpty()) {
+						for(int i = 0; i < lifelines.size(); i++) {
+							Lifeline lifeline = (Lifeline)lifelines.get(i);							
+							double lifelineX = lifeline.getLocation().
+									getLocation()[0];							
+							// TODO this lifelineFigure has to be removed... problems with LifelineX
+							LifelineFigure l = (LifelineFigure)
+									UMLGraphController.this.getFigure(
+									lifeline.getLocation());
+							lifelineX = l.getLifelineX();
+							// Initialization, needed when there is only 
+							// ONE Lifeline
+							if(i == 0) {
+								leftX = lifelineX;
+								rightX = lifelineX;							
+							}
+							if(leftX > lifelineX) {
+								leftX = lifelineX;
+							}
+							if(rightX < lifelineX) {
+								rightX = lifelineX;
+							}
+						}
+						// create slightly bigger margins than what is given
+						// through the Lifelines
+						leftX -= 30;
+						rightX += 30;
+						
+						width = rightX - leftX;
+						x = leftX + (width / 2);																													
+					}
+					else {
+						// there were no Lifelines => list was empty... 
+						// nevertheless create a small CombinedFragment...
+						leftX = 30;
+						rightX = 60;
+
+						width = rightX - leftX;
+						x = leftX + (width / 2);											
+					}
+				}
+				else {
+					// list of Lifelines was null... Nevertheless create a
+					// small CombinedFragment...
+					leftX = 30;
+					rightX = 60;
+
+					width = rightX - leftX;
+					x = leftX + (width / 2);
+				}
+				double[] pos = {x, 150}; // start value of y is hardcoded
+				double[] widthHeigth = {width, 100}; // as the height is		
+				
+                                // Creates other combined fragments than just par
+                               
+                                
+                                
+                                if (event.getActionCommand() == "par") {
+                                
+                                    try {
+                                        new CombinedFragment(rootModel, combFragName, pos,
+                                                widthHeigth, new Par());
+                                    }
+                                    catch(NameDuplicationException nDE) {
+                                        nDE.printStackTrace();
+                                    }
+                                    catch(IllegalActionException iAE) {
+                                        iAE.printStackTrace();
+                                    }
+                                } else if (event.getActionCommand() == "loop") {
+                                    try {
+                                            new CombinedFragment(rootModel, combFragName, pos,
+                                                            widthHeigth, new Loop());
+                                    }
+                                    catch(NameDuplicationException nDE) {
+                                            nDE.printStackTrace();
+                                    }
+                                    catch(IllegalActionException iAE) {
+                                            iAE.printStackTrace();
+                                    }
+                                } else if (event.getActionCommand() == "opt") {
+                                    try {
+                                        new CombinedFragment(rootModel, combFragName, pos,
+                                                widthHeigth, new Opt());
+                                    }
+                                    catch(NameDuplicationException nDE) {
+                                            nDE.printStackTrace();
+                                    }
+                                    catch(IllegalActionException iAE) {
+                                            iAE.printStackTrace();
+                                    }
+                                } else if (event.getActionCommand() == "alt") {
+                                    try {
+                                        new CombinedFragment(rootModel, combFragName, pos,
+                                                widthHeigth, new Alt());
+                                    }
+                                    catch(NameDuplicationException nDE) {
+                                            nDE.printStackTrace();
+                                    }
+                                    catch(IllegalActionException iAE) {
+                                            iAE.printStackTrace();
+                                    }
+                                }
+                                
+			
+				// TODO is this needed here?
+				getGraphModel().dispatchGraphEvent(new GraphEvent(
+						this, GraphEvent.STRUCTURE_CHANGED,
+						rootModel));	
+			}
+		}
+	} // end of CreateCombFragAction-class
+	
+	/**
+	 * This action sets the according interactor to either create an 
+	 * asynchronous message or to drag around Lifelines horizontally.
+	 * 
+	 * => implements ActionListener Interface
+	 * 
+	 * @author Andreas Thuy
+	 */
+	
+	public class MessageAction extends FigureAction {
+
+		// name of this action
+		private String name;
+		
+		/**
+		 * @param name - name of this action
+		 */
+		public MessageAction(String name) {
+			super(name);			
+			this.name = name;
+		}				
+		
+		/**
+		 * Called whenever the according button is pressed. 
+		 * 
+		 * Switches between a LocatableNodeDragInteractor that drags around
+		 * Lifelines and a MessageCreator which draws Messages. Both are
+		 * contained in the composite-NodeInteractor of Lifelines. Switching
+		 * works via enabling only one of them at the same time.
+		 * 
+		 * Also decide if there should be a synchronous or an asynchronous 
+		 * Message.
+		 *  
+		 * @see ptolemy.vergil.toolbox.FigureAction#actionPerformed(java.awt.event.ActionEvent)
+		 */
+		public void actionPerformed(ActionEvent e) {
+			// this is an Action, but it will actually only react to JToggleButtons
+			
+			Object source = e.getSource();
+			
+			MessageCreator msgCreator = null;
+			LocatableNodeDragInteractor dragger = null;
+			
+			CompositeInteractor c = (CompositeInteractor)
+					getLifelineController().getNodeInteractor();
+			
+			Iterator iter = c.interactors();
+			while(iter.hasNext()) {
+				Interactor in = (Interactor)iter.next();
+				
+				// TODO find out if there is a better way to do this...
+
+				// only one of the following two interactors is active
+				
+				// switch between a MessageCreator that draws the messages
+				// [Lifelines keep their position (they don't move, even if
+				// the mouse clicks on a Lifeline)]
+				// and a LocatableNodeDragInteractor.
+				// with this one you can move the Lifelines from left to 
+				// right or vice versa
+
+				if(in instanceof MessageCreator) {
+					msgCreator = (MessageCreator)in;
+				}
+				else if(in instanceof LocatableNodeDragInteractor) {
+					dragger = (LocatableNodeDragInteractor)in;
+				}
+			}
+			if(msgCreator == null || dragger == null) {
+				System.out.println("Problems with Interactors of Lifeline nodes!");
+			}
+			else {
+				if(source == UMLGraphController.this.asyncJToggleB) {
+					if(((JToggleButton)source).isSelected()) {
+						UMLGraphController.this.syncJToggleB.setEnabled(false);
+						dragger.setEnabled(false);
+						msgCreator.setSynchronous(false);
+						msgCreator.setEnabled(true);
+					}
+					else if(!((JToggleButton)source).isSelected()) {
+						UMLGraphController.this.syncJToggleB.setEnabled(true);
+						msgCreator.setEnabled(false);
+						dragger.setEnabled(true);
+					}
+				}
+				else if(source == UMLGraphController.this.syncJToggleB) {
+					if(((JToggleButton)source).isSelected()) {
+						UMLGraphController.this.asyncJToggleB.setEnabled(false);
+						dragger.setEnabled(false);
+						msgCreator.setSynchronous(true);
+						msgCreator.setEnabled(true);
+					}
+					else if(!((JToggleButton)source).isSelected()) {
+						UMLGraphController.this.asyncJToggleB.setEnabled(true);
+						msgCreator.setEnabled(false);
+						dragger.setEnabled(true);
+					}
+				}
+			}								
+		}
+	} // end of MessageAction-class
+	
+	/**
+	 * Interactor that is used when a message is created. No changes are 
+	 * applied to the Ptolemy-model yet. Only graphical operations are used
+	 * here.
+	 * 
+	 * @author Andreas Thuy
+	 */
+	// information is added to the model when the Message is dropped at the
+	// receiver-lifeline, then all necessary pieces of information are
+	// written to the model
+	public class MessageCreator extends AbstractInteractor {
+	
+		// depicts if the Message that shall be created is of 
+		// MessageSort.SYNCH_MESSAGE, default is MessageSort.ASYNCH_MESSAGE
+		private boolean isSynchronous = false;
+		
+		/**
+		 * @return - if the Message that shall be created is of sort
+		 * MessageSort.SYNCH_MESSAGE (true) or not
+		 */
+		public boolean isSynchronous() {
+			return isSynchronous;
+		}
+
+		/* (non-Javadoc)
+		 * 
+		 * Create the MessageConnector that will be shown on the screen. 
+		 * Only create the figure but no changes to the Ptolemy-model.
+		 * 
+		 * Do only start to draw the Message if the mouse was pressed on a 
+		 * Lifeline.
+		 * 
+		 * @see diva.canvas.interactor.AbstractInteractor#mousePressed(diva.canvas.event.LayerEvent)
+		 */
+		// Working with layer coordinates here!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		public void mousePressed(LayerEvent layerEvent) {        	        	
+			Figure source = layerEvent.getFigureSource();
+        	if(source != null) {
+        		if(source instanceof LifelineFigure) {
+        			Point2D p = layerEvent.getLayerPoint();
+            		// condition is enforced because no Gates are supported,
+            		//Messages can only be drawn from one Lifeline to another
+        			if(((LifelineFigure)source).isOnLiveLine(p)) {
+        			
+// created with the help of the Copy & Paste antipattern :)
+// source: ActorEditorGraphController.LinkCreator.mousePressed(...)        		
+        		
+        				// add the new Message to the foreground layer.
+        				     			
+        				FigureLayer layer = getGraphPane().
+        						getForegroundLayer();
+           				Site headSite, tailSite;
+
+           				// Temporary sites. 
+           				// tailSite will get blown away later.
+           				tailSite = new AutonomousSite(layer,
+           						layerEvent.getLayerX(), 
+           						layerEvent.getLayerY());           					
+           				// one step right of tailSite
+           				headSite = new AutonomousSite(layer,
+           						layerEvent.getLayerX() + 1,
+           						layerEvent.getLayerY());
+        			
+           				// Render a dummy edge without a userObject
+           				Connector c = getMessageController().
+           						renderDummyMessage(layer, tailSite, headSite);
+           				// get the actual attach tailSite.
+           				tailSite = getMessageController().
+           						getConnectorTarget().getTailSite(c, source,
+           						layerEvent.getLayerX(), 
+           						layerEvent.getLayerY());
+           				if (tailSite == null) {
+           					throw new RuntimeException("Invalid " +
+           							"connector target: no valid site " +
+           							"found for tail of new connector.");
+           				}
+           				c.setTailSite(tailSite);
+       					// TODO check this
+      					// Add it to the selection so it gets a manipulator, 
+       					// and make events go to the grab-handle under 
+       					// the mouse
+       					getSelectionModel().addSelection(c);
+       					ConnectorManipulator cm =
+       						(ConnectorManipulator) c.getParent();
+           					GrabHandle gh = cm.getHeadHandle();
+           					layer.grabPointer(layerEvent, gh);
+        			}
+        			
+        		}
+          	}
+		}
+
+		/**
+		 * @param isSynchronous - state if Messages of 
+		 * MessageSort.SYNCH_MESSAGE (true) or MessageSort.ASYNCH_MESSAGE
+		 * should be created
+		 */
+		public void setSynchronous(boolean isSynchronous) {
+			this.isSynchronous = isSynchronous;
+		}
+	} // end of MessageCreator-class
+	
+	private SelectionDragger _selectionDragger = null;
+
+	private MessageAction asynchAction = new MessageAction("Async. Message");
+	
+	private JToggleButton asyncJToggleB = null;
+
+	
+	private CombFragNodeController combFragController = null;
+
+	// NodeControllers
+	private LifelineNodeController lifelineController = null;
+
+
+	// EdgeController
+	private MessageController messageController = null;
+
+	// interactor, active when messages are created
+	private MessageCreator messageCreator = null;
+	
+	private MessageAction syncAction = new MessageAction("Sync. Message");
+	
+	private JToggleButton syncJToggleB = null;
+
+	/**
+	 * Construct a UMLGraphController and assign corresponding node and edge
+	 * controller.
+	 */
+	public UMLGraphController() {
+		super();
+        _portController = new ExternalIOPortController(this,
+                AttributeController.PARTIAL);
+		// only allow SINGLE_SELECTION
+		this.getSelectionModel().setSelectionMode(
+				SelectionModel.SINGLE_SELECTION);
+		this.lifelineController = new LifelineNodeController(this);
+		this.combFragController = new CombFragNodeController(this);
+		this.messageController = new MessageController(this);				
+	}
+		
+	/* (non-Javadoc)
+	 * 
+	 * Buttons for creating sequence diagram stuff are added...
+	 * 
+	 * @see ptolemy.vergil.basic.BasicGraphController#addToMenuAndToolbar(javax.swing.JMenu, javax.swing.JToolBar)
+	 * 
+	 */
+	// TODO remove dependencies that result in absolute paths here...
+	public void addToMenuAndToolbar(JMenu menu, JToolBar toolbar) {		
+		super.addToMenuAndToolbar(menu, toolbar);	
+		
+//		diva.gui.GUIUtilities.addMenuItem(menu, _newInputPortAction);
+//        diva.gui.GUIUtilities.addToolBarButton(toolbar, _newInputPortAction);
+//      diva.gui.GUIUtilities.addMenuItem(menu, _newOutputPortAction);
+//        diva.gui.GUIUtilities.addToolBarButton(toolbar, _newOutputPortAction);
+
+		
+		URL asyncURL = null;
+		URL syncURL = null;
+		URL combURL = null;
+		try {			
+
+		    asyncURL = new URL("file:///" + System.getProperty("user.dir") + "/ptolemy/vergil/uml/img/asyncMessage.gif");
+		    syncURL = new URL("file:///" + System.getProperty("user.dir") + "/ptolemy/vergil/uml/img/syncMessage.gif");
+		    combURL = new URL("file:///" + System.getProperty("user.dir") + "/ptolemy/vergil/uml/img/combFrag.gif");
+
+		    // asyncURL = new URL("file:///D:/Code/ptII/ptolemy/vergil/uml/img/asyncMessage.gif");
+            // syncURL = new URL("file:///D:/Code/ptII/ptolemy/vergil/uml/img/syncMessage.gif");
+            // combURL = new URL("file:///D:/Code/ptII/ptolemy/vergil/uml/img/combFrag.gif");
+            //        asyncURL = new URL("file:/home/maatta/ptII6.0.2/ptolemy/vergil/uml/img/asyncMessage.gif");    
+            //        syncURL = new URL("file:/home/maatta/ptII6.0.2/ptolemy/vergil/uml/img/syncMessage.gif");
+            //        combURL = new URL("file:/home/maatta/ptII6.0.2/ptolemy/vergil/uml/img/combFrag.gif");
+
+		}
+		catch(Exception mUE) {
+			mUE.printStackTrace();
+		}
+		ImageIcon asyncImg = new ImageIcon(asyncURL);
+		ImageIcon syncImg = new ImageIcon(syncURL);
+		ImageIcon combImgPar = new ImageIcon(combURL);
+                ImageIcon combImgOpt = new ImageIcon(combURL);
+                ImageIcon combImgLoop = new ImageIcon(combURL);
+                ImageIcon combImgAlt = new ImageIcon(combURL);
+
+		this.asyncJToggleB = new JToggleButton(this.asynchAction);
+		this.syncJToggleB = new JToggleButton(this.syncAction);
+		
+		toolbar.add(this.asyncJToggleB);
+		toolbar.add(this.syncJToggleB);
+		this.asyncJToggleB.setIcon(asyncImg);
+		this.asyncJToggleB.setText("");
+		this.syncJToggleB.setIcon(syncImg);
+		this.syncJToggleB.setText("");
+		
+		// add ordinary JButton for adding CombinedFragments
+		JButton combFragButton = new JButton(new CreateCombFragAction("Par"));
+		combFragButton.setIcon(combImgPar);
+		combFragButton.setText("par");
+		toolbar.add(combFragButton);
+                
+                JButton combFragButtonOpt = new JButton(new CreateCombFragAction("Opt"));
+                combFragButtonOpt.setIcon(combImgOpt);
+                combFragButtonOpt.setText("opt");
+                toolbar.add(combFragButtonOpt);
+                
+                JButton combFragButtonLoop = new JButton(new CreateCombFragAction("Loop"));
+                combFragButtonLoop.setIcon(combImgLoop);
+                combFragButtonLoop.setText("loop");
+                toolbar.add(combFragButtonLoop);
+                
+                JButton combFragButtonAlt = new JButton(new CreateCombFragAction("Alt"));
+                combFragButtonAlt.setIcon(combImgAlt);
+                combFragButtonAlt.setText("alt");
+                toolbar.add(combFragButtonAlt);
+                
+	 }
+
+	
+	
+	
+// TODO should this UMLGraphController be registered as a ChangeListener?
+	public void changeExecuted(ChangeRequest change) {
+        String description = change.getDescription();        
+        
+		// always rerender when something has changed...
+        // and update the position of the CombinedFragments...
+        // TODO not efficient
+        if(!description.contains("delete")) {
+        	updateCombFragPos();
+        	System.out.println(description);
+        //	rerender();
+        }
+	}
+
+	public void changeFailed(ChangeRequest change, Exception exception) {
+		// TODO Auto-generated method stub		
+	}
+	
+	public EdgeController getEdgeController(Object edge) {		
+		return this.messageController;
+	}
+	
+	public LifelineNodeController getLifelineController() {
+		return this.lifelineController;		
+	}
+	
+	 public MessageController getMessageController() {		
+		return this.messageController;
+	}
+
+	public NodeController getNodeController(Object object) {				
+		NodeController nodeController = null;
+		if(object instanceof Location) {
+			if(((Location)object).getContainer() instanceof Lifeline) {
+				nodeController = this.lifelineController;
+				return nodeController;
+			}
+			else if(((Location)object).getContainer() instanceof
+					CombinedFragment) {				
+			    nodeController = this.combFragController;
+			    return nodeController;
+			}
+		//	else if (((Location)object).getContainer() instanceof
+		//			Port) {
+		//		return _portController;
+		//	}
+		}
+		return super.getNodeController(object);
+		
+	}
+
+	/* (non-Javadoc)
+	 * @see diva.graph.AbstractGraphController#initializeInteraction()
+	 * 
+	 * set initial interactors
+	 */
+	protected void initializeInteraction() {		
+		super.initializeInteraction();		
+		// prepare interactor responsible for message creation
+		this.messageCreator = new MessageCreator();
+		this.messageCreator.setMouseFilter(MouseFilter.defaultFilter);
+		this.messageCreator.setEnabled(false);
+		((CompositeInteractor)this.lifelineController.getNodeInteractor()).
+				addInteractor(this.messageCreator);
+
+		// Create and set up the selection dragger
+        this._selectionDragger = new SelectionDragger(getGraphPane());
+        this._selectionDragger.addSelectionModel(getSelectionModel());
+        
+        this._selectionDragger.setConsuming(false);        
+	}
+	
+	public void rerender() {
+        getSelectionModel().clearSelection();
+		super.rerender();
+		// draw Messages
+		Iterator msgs = ((UMLGraphModel)getGraphModel()).getMessageModel().
+				getMessages();
+		while (msgs.hasNext()) {
+            Message msgEdge = (Message)msgs.next();
+            if(msgEdge.getSendEvent() != null && 
+            		msgEdge.getReceiveEvent() != null) {
+            	if(msgEdge.getSendEvent().getEvent() != null && 
+            			msgEdge.getReceiveEvent().getEvent() != null) {
+            		if(msgEdge.getSendEvent().getLifeline() != null &&
+            				msgEdge.getReceiveEvent().getLifeline() != null) {
+            			drawEdge(msgEdge); 	
+            		}
+            	}
+            }
+        }		
+	}
+// TODO inconsistend with location calculation in CreateCombFragAction
+	protected void updateCombFragPos() {
+		// calculate width of the CombinedFragment so that it
+		// includes all the lifelines from left to right
+		List lifelines = ((NamedObj)UMLGraphController.this.
+				getGraphModel().getRoot()).attributeList(Lifeline.class);
+		double leftX = 0;
+		double rightX = 0;
+		double x = 0;
+		double width = 0;
+		if(lifelines != null) {
+
+		for(int i = 0; i < lifelines.size(); i++) {
+			Lifeline lifeline = (Lifeline)lifelines.get(i);
+			double lifelineX = lifeline.getLocation().getLocation()[0];
+
+			// TODO this lifelineFigure has to be removed... problems with LifelineX
+			LifelineFigure l = (LifelineFigure)
+					UMLGraphController.this.getFigure(
+					lifeline.getLocation());
+			lifelineX = l.getLifelineX();
+
+			if(i == 0) {
+				leftX = lifelineX;
+				rightX = lifelineX;							
+			}
+			if(leftX > lifelineX) {
+				leftX = lifelineX;
+			}
+			if(rightX < lifelineX) {
+				rightX = lifelineX;
+			}
+		}
+		x = leftX + (rightX - leftX) / 2;
+		leftX -= 30;
+		rightX += 30;					
+		width = rightX - leftX;
+		}
+		else {
+			leftX = 30;
+			x = leftX + (leftX + rightX) / 2;
+			rightX = 60;
+			width = rightX - leftX;
+		}
+
+		Iterator combFrags = ((NamedObj)this.getGraphModel().getRoot()).
+			attributeList(CombinedFragment.class).iterator();
+		while(combFrags.hasNext()) {
+			CombinedFragment combi = (CombinedFragment)combFrags.next();
+			combi.setXPos(x);
+			combi.setWidth(width);
+		}				
+	}
+	
+// TODO I don't think it belongs to this class...
+	
+	/* (non-Javadoc)
+	 * @see ptolemy.kernel.util.ValueListener#valueChanged(ptolemy.kernel.util.Settable)
+	 * 
+	 * update if name of an object has changed...
+	 * 
+	 * names don't change at the moment...
+	 * 
+	 * but locations do...
+	 */
+	public void valueChanged(Settable settable) {
+		if(settable instanceof Location) {
+			Location loc = (Location)settable;
+			if(loc.getContainer() instanceof Lifeline) {
+				updateCombFragPos();
+			}
+		}
+	}
+/*	
+	// Action for creating a new input port. 
+
+    private Action _newInputPortAction = new NewPortAction(
+            ExternalIOPortController._GENERIC_INPUT, "New input port",
+            KeyEvent.VK_I, new String[][] {
+                    { "/ptolemy/vergil/actor/img/single_in.gif",
+                            GUIUtilities.LARGE_ICON },
+                    { "/ptolemy/vergil/actor/img/single_in_o.gif",
+                            GUIUtilities.ROLLOVER_ICON },
+                    { "/ptolemy/vergil/actor/img/single_in_ov.gif",
+                            GUIUtilities.ROLLOVER_SELECTED_ICON },
+                    { "/ptolemy/vergil/actor/img/single_in_on.gif",
+                            GUIUtilities.SELECTED_ICON } });
+*/
+
+/*
+	// Action for creating a new output port. 
+	
+    private Action _newOutputPortAction = new NewPortAction(
+            ExternalIOPortController._GENERIC_OUTPUT, "New output port",
+            KeyEvent.VK_O, new String[][] {
+                    { "/ptolemy/vergil/actor/img/single_out.gif",
+                            GUIUtilities.LARGE_ICON },
+                    { "/ptolemy/vergil/actor/img/single_out_o.gif",
+                            GUIUtilities.ROLLOVER_ICON },
+                    { "/ptolemy/vergil/actor/img/single_out_ov.gif",
+                            GUIUtilities.ROLLOVER_SELECTED_ICON },
+                    { "/ptolemy/vergil/actor/img/single_out_on.gif",
+                            GUIUtilities.SELECTED_ICON } });
+	*/
+} // end of UMLGraphController :)

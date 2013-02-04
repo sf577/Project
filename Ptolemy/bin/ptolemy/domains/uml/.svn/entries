@@ -1,0 +1,34 @@
+9
+
+dir
+482
+https://svn.cs.york.ac.uk/svn/NoC/release2011/ptolemy/domains/uml
+https://svn.cs.york.ac.uk/svn/NoC
+
+
+
+2010-08-05T19:06:52.341624Z
+227
+lsi@CS.YORK.AC.UK
+
+
+svn:special svn:externals svn:needs-lock
+
+
+
+
+
+
+
+
+
+
+
+6317afec-63df-4c86-8fc2-3ec0ef2c9fb4
+
+kernel
+dir
+
+lib
+dir
+

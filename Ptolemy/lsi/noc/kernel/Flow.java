@@ -1,0 +1,15 @@
+package lsi.noc.kernel;
+
+public interface Flow {
+
+	public Route getRoute();
+
+	public void setRoute(Route route);
+
+	public Task getSender();
+
+	public Task getReceiver();
+
+	public double getUtilization(double hopLatency, double routingLatency);
+
+}

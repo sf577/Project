@@ -1,0 +1,10 @@
+# This file contains the command template that is preprocessed
+# by ptolemy.copernicus.kernel.Copernicus to create the command
+# that will run the generated code.
+#
+# @author Christopher Hylands
+# @version $Id: runCommandTemplate.txt,v 1.1 2004/01/21 21:55:12 neuendor Exp $
+#
+"@java@"
+ -Xfuture -classpath "@ptIIUserDirectory@/@targetPath@"
+ @targetPackage@.Main 

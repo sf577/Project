@@ -1,0 +1,189 @@
+package lsi.noc.kernel.mapping;
+
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+
+import lsi.noc.kernel.ApplicationModel;
+import lsi.noc.kernel.GroupableTask;
+import lsi.noc.kernel.Link;
+import lsi.noc.kernel.Platform;
+import lsi.noc.kernel.ProcessingCore;
+import lsi.noc.kernel.Task;
+import lsi.noc.kernel.priority.PriorityTrafficFlow;
+
+/* 
+ * @author      Leandro Soares Indrusiak
+ * @version 1.0 (York, 14/08/2010) 
+ * @version 1.1 (York, 03/02/2011) 
+ * 
+ * 
+ * Abstract class that describes the basic attributes and methods to be implemented by all 
+ * mapping heuristics. Its constructor uses a Hashtable to store the current mapping. The heuristic
+ * implementing the actual mapping is left to be implemented by the subclasses.
+ * 
+ * 
+
+*/
+
+public abstract class Mapping {
+	
+	protected ApplicationModel application;
+	protected Platform platform;
+	protected Map<Task,ProcessingCore> mapping;
+	
+	/* @version 1.2 (York, 16/02/2011)*/
+	
+	public Mapping(ApplicationModel a, Platform p){
+		application = a;
+		platform = p;
+		instantiateMappingTable();
+	}
+
+	protected void instantiateMappingTable()
+	{
+		mapping = new HashMap<Task,ProcessingCore>();
+	}
+	
+	/*
+	 * Abstract method to perform the mapping. Should be used by the subclasses to implement
+	 * mapping algorithms. Returns false if mapping fails, true otherwise.
+	 */
+	public abstract boolean performMapping();
+	
+	
+	/*
+	 * An implementation of the method that maps tasks to processors according to a predefined mapping - Map in arguments.
+	 */
+	public boolean performMapping( Map<Task,ProcessingCore> m) 
+	{
+		
+		/*Set the new mapping*/
+		mapping = new HashMap<Task,ProcessingCore>();
+			
+		Set<Task> t = m.keySet();
+		Iterator<Task> it = t.iterator();
+		
+		/*Map the tasks*/
+		for(int k=0;k<t.size();k++)
+		{					
+			Task ta = it.next();			
+			mapTaskToCore((GroupableTask) ta,m.get(ta));
+		}
+		
+		/*make into error checking*/
+		return true;
+	}
+	
+	
+	/*
+	 * Removes all previous mappings of the provided tasks and cores, then apply a predefined mapping (an instance of Map in arguments).
+	 */
+	public boolean substituteMapping( Map<Task,ProcessingCore> m) 
+	{
+		clearPlatform();
+		performMapping(m);
+		return true;
+	}
+	
+	public void clearPlatform(){
+		
+		/*Remove all the previously mapped tasks*/
+		for (int i = 0; i < this.platform.getCores().size(); i++ )
+		{	
+			this.platform.getCores().get(i).getTasks().clear();
+		}
+		
+		/*Remove the references of cores from tasks*/
+		for (int i = 0; i < this.application.getTasks().size(); i++ )
+		{
+			this.application.getTasks().get(i).setCore(null);			
+		}
+		
+		/* Clear all the links from previously mapped flows */
+		for (int l = 0; l < platform.getInterconnect().getLinks().size(); l++) {
+			platform.getInterconnect().getLinks().get(l).clearLink();
+		}
+		
+		
+		
+	}
+	
+	
+	public ApplicationModel getApplication(){return application;}
+	public Platform getPlatform(){return platform;}
+	public Map<Task,ProcessingCore> getMapping(){return mapping;}
+	
+	public Map<Task,ProcessingCore> getMappingClone(){return ((Map<Task, ProcessingCore>)((HashMap<Task, ProcessingCore>) mapping).clone());}
+
+	
+
+	/*
+	 * Should be used by the subclasses to map a task to a core. It updates the
+	 * core entry of the task, adds the task to the list of tasks of the core
+	 * and updates the mapping table.
+	 */
+	protected void mapTaskToCore(Task t, ProcessingCore pc){
+	
+		t.setCore(pc);
+		//pc.mapTask(t); Already called in Task.setCore();
+		mapping.put(t, pc);
+	}
+	
+	
+	/*
+	 * Should be used by the subclasses to remove a task from a core. It sets the
+	 * core entry of the task to null, removes the task from the list of tasks of the core
+	 * and removes the task from the mapping table.
+	 */
+	protected void removeTaskFromCore(Task t, ProcessingCore pc){
+		
+		if(((GroupableTask)t).getGroupStatus()==1||((GroupableTask)t).getGroupStatus()==0){
+			
+		t.setCore(null);
+		pc.unmapTask(t);
+		mapping.remove(t);
+		
+	    for(int i=0;i<((GroupableTask) t).getGroupSize();i++){
+	    this.mapping.remove(((GroupableTask) t).getFromGroup(i));
+	    pc.unmapTask(((GroupableTask) t).getFromGroup(i));
+		}
+	}
+		
+	}
+	
+	/*
+	 * Should be used by the subclasses to change a task from one core to another. 
+	 */
+	/*
+	 * Should be used by the subclasses to change a task from one core to another. 
+	 */
+	protected void remapTask(Task t, ProcessingCore newCore){
+		
+		t.getCore().unmapTask(t);
+		t.setCore(newCore);
+		//newCore.mapTask(t);   Already called in Task.setCore();
+		mapping.put(t, newCore);
+	}
+	
+	/*
+	 * Should be used by the subclasses to swap the cores of two tasks. 
+	 */
+	
+	protected void swapTasks(Task t1, Task t2){
+		
+		ProcessingCore p1 = t1.getCore();
+		ProcessingCore p2 = t2.getCore();
+		
+		remapTask(t1,p2);
+		remapTask(t2,p1);
+		
+	}
+	
+	
+
+}

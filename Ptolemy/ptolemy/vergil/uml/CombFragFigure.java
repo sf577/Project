@@ -1,0 +1,58 @@
+package ptolemy.vergil.uml;
+
+import java.awt.Color;
+import java.awt.Font;
+
+import diva.canvas.CompositeFigure;
+import diva.canvas.toolbox.BasicRectangle;
+import diva.canvas.toolbox.LabelFigure;
+
+/**
+ * Graphical representation of a UML CombinedFragment. It is a rectangle with a
+ * String in the upper left corner depicting the InteractionOperator of the
+ * CombinedFragment.
+ * 
+ * @author Andreas Thuy
+ * 
+ *         last review: 09.09.06
+ */
+public class CombFragFigure extends CompositeFigure {
+
+	private BasicRectangle combFrag = null;
+	private LabelFigure interactionOperator = null;
+
+	public CombFragFigure(double x, double y, double width, double height,
+			String interactionOperator) {
+		super();
+		this.combFrag = new BasicRectangle(x, y, width, height);
+		this.combFrag.setFillPaint(new Color(150, 150, 150));
+		this.add(this.combFrag);
+		this.interactionOperator = new LabelFigure(interactionOperator);
+		this.interactionOperator.setFillPaint(Color.BLACK);
+		this.interactionOperator.setFont(new Font(null, Font.PLAIN, 12));
+		this.add(this.interactionOperator);
+		this.interactionOperator.translate(x + 3, y + 10);
+	}
+
+	public BasicRectangle getCombFrag() {
+		return this.combFrag;
+	}
+
+	public LabelFigure getInteractionOperator() {
+		return this.interactionOperator;
+	}
+
+	/**
+	 * @return the String that is represented through the LabelFigure-attribute
+	 *         interactionOperator. It represents the InteractionOperator of the
+	 *         CombinedFragment that is displayed as the CombFragFigure.
+	 */
+	public String getInteractionOperatorString() {
+		return getInteractionOperator().getString();
+	}
+
+	public void repaint() {
+		getCombFrag().repaint();
+		getInteractionOperator().repaint();
+	}
+}

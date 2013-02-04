@@ -1,0 +1,152 @@
+package lsi.noc.kernel;
+
+import java.awt.Point;
+
+/* 
+ * @author      Leandro Soares Indrusiak
+ * @version 1.0 (York, 10/12/2009) 
+ */
+
+public class Mesh2DXYRouting extends RoutingAlgorithm {
+
+	public Link nextHop(Mesh2DRouter rl, Mesh2DRouter rt, Mesh2DNoC m) {
+
+		// gets the mesh location of the current router and of the destination
+		Point pt = m.getMeshLocation(rt);
+		Point pl = m.getMeshLocation(rl);
+
+		int tx = pt.x;
+		int ty = pt.y;
+		int lx = pl.x;
+		int ly = pl.y;
+
+		// defines the next hop by choosing the appropriate output link of the
+		// current router
+		if (lx == tx && ly == ty)
+			return rl.linksOut[Mesh2DRouter.LOCAL];
+		else if (lx > tx)
+			return rl.linksOut[Mesh2DRouter.WEST];
+		else if (lx < tx)
+			return rl.linksOut[Mesh2DRouter.EAST];
+		else if (ly < ty)
+			return rl.linksOut[Mesh2DRouter.NORTH];
+		else
+			return rl.linksOut[Mesh2DRouter.SOUTH];
+
+	}
+
+	public Link nextHop(Mesh2DRouter rl, ProcessingCore c, Mesh2DNoC m) {
+
+		// gets the local router of the processing core
+		Mesh2DRouter rt = (Mesh2DRouter) c.getOutput().traverse(c);
+
+		// if it is the current router, return its output link at the local port
+		// otherwise call next hop from router to router
+		if (rl == rt)
+			return rl.getOutputLink(Mesh2DRouter.LOCAL);
+		else
+			return nextHop(rl, rt, m);
+
+	}
+
+	public Link nextHop(Linkable current, Linkable destination, Interconnect i) {
+
+		// checks whether interconnect is a 2D Mesh NoC
+		Mesh2DNoC m = null;
+		if (i instanceof Mesh2DNoC) {
+			m = (Mesh2DNoC) i;
+		} else
+			return null;
+
+		// if current is a processing core, return its output link
+		if (current instanceof ProcessingCore) {
+			return ((ProcessingCore) current).getOutput();
+		}
+
+		// if it is a router, call the respective methods for router-router or
+		// router-core routing
+		else if (current instanceof Mesh2DRouter) {
+
+			if (destination instanceof Mesh2DRouter) {
+				return nextHop((Mesh2DRouter) current,
+						(Mesh2DRouter) destination, m);
+			} else if (destination instanceof ProcessingCore) {
+				return nextHop((Mesh2DRouter) current,
+						(ProcessingCore) destination, m);
+			}
+		}
+
+		return null;
+
+	}
+
+	public Route route(Linkable source, Linkable destination, Interconnect i) {
+
+		Mesh2DNoC m = null;
+
+		// checks if the interconnect is a 2D Mesh NoC
+		if (i instanceof Mesh2DNoC) {
+			m = (Mesh2DNoC) i;
+		} else
+			return null;
+
+		// checks whether source and destination are components of a 2D Mesh NoC
+		// (routers or processing cores)
+		// and whether they are connected by the interconnect
+		boolean connected = true;
+
+		if (source instanceof Mesh2DRouter) {
+			connected = connected & m.contains((Mesh2DRouter) source);
+		} else if (source instanceof ProcessingCore) {
+			connected = connected & m.links((ProcessingCore) source);
+		} else
+			connected = false;
+
+		if (destination instanceof Mesh2DRouter) {
+			connected = connected & m.contains((Mesh2DRouter) destination);
+		} else if (destination instanceof ProcessingCore) {
+			connected = connected & m.links((ProcessingCore) destination);
+		} else
+			connected = false;
+
+		Route ro = new Route(i);
+
+		if (connected) {
+
+			// upon start, current linkable is the source
+			Linkable rc = source;
+
+			// if it is a processing core, it must reach its respective router
+			// even if it is
+			// sending a packet to itself
+
+			if (rc instanceof ProcessingCore) {
+				ProcessingCore core = (ProcessingCore) rc;
+				Point p = m.getMeshLocation(core);
+				Mesh2DRouter rrouter = m.getRouter(p.x, p.y);
+				DirectedLink nextLink = (DirectedLink) nextHop(rc, rrouter, m);
+				ro.add(nextLink);
+				rc = nextLink.traverse(rc);
+			}
+
+			// loops until the current linkable is the destination
+			while (!rc.equals(destination)) {
+
+				DirectedLink nextLink = (DirectedLink) nextHop(rc, destination,
+						m);
+
+				if (nextLink != null) {
+					ro.add(nextLink);
+					rc = nextLink.traverse(rc);
+
+				}
+
+			}
+
+		}
+
+		return ro;
+
+	}
+
+}

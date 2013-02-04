@@ -1,0 +1,111 @@
+package lsi.noc.kernel;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+
+/* 
+ * @author      Leandro Soares Indrusiak
+ * @version 1.1 (York, 16/12/2009) 
+ */
+
+public class Route {
+
+	protected Interconnect network;
+	ArrayList<Link> links;
+
+	public Route() {
+
+		links = new ArrayList<Link>();
+	}
+
+	public Route(Interconnect net) {
+
+		links = new ArrayList<Link>();
+		network = net;
+	}
+
+	// adds a link to the this route, without checking whether this link is
+	// contiguous to the route
+	public void add(Link l) {
+
+		links.add(l);
+
+	}
+
+	// returns whether this route contains a specified link
+	public boolean contains(Link l) {
+
+		return links.contains(l);
+
+	}
+
+	// returns whether a specified route intersects with this one (i.e. has at
+	// least one common link)
+	public boolean intersects(Route r) {
+
+		Iterator it = r.iterator();
+		while (it.hasNext()) {
+			if (links.contains(it.next()))
+				return true;
+
+		}
+
+		return false;
+
+	}
+
+	// returns a list of all links that a specified route has in common with
+	// this one
+	public ArrayList<Link> getIntersectingLinks(Route r) {
+
+		ArrayList<Link> intersecting = r.getLinks();
+		intersecting.retainAll(getLinks());
+		return intersecting;
+
+	}
+
+	// returns how many links that a specified route has in common with this one
+	public int getIntersectingLinksCount(Route r) {
+
+		return getIntersectingLinks(r).size();
+
+	}
+
+	public Iterator<Link> iterator() {
+
+		return getLinks().iterator();
+
+	}
+
+	// returns how many links this route has
+	public int getHopCount() {
+		return links.size();
+	}
+
+	public String toString() {
+
+		String str = "";
+
+		Iterator<Link> it = iterator();
+
+		while (it.hasNext()) {
+			Link ln = it.next();
+			str = str + " - " + ln.toString();
+		}
+
+		return str;
+
+	}
+
+	// returns a list of references to the links contained by this route
+	public ArrayList<Link> getLinks() {
+
+		return new ArrayList<Link>(links);
+
+	}
+
+	public Interconnect getInterconnect() {
+		return network;
+	}
+
+}

@@ -1,0 +1,154 @@
+/* Actor is sending packets according to the mapper's instructions. */
+
+package lsi.noc.application.purplepringle;
+
+import java.util.Hashtable;
+
+import ptolemy.actor.util.Time;
+import ptolemy.data.BooleanToken;
+import ptolemy.data.IntToken;
+import ptolemy.data.DoubleToken;
+import ptolemy.data.Token;
+import ptolemy.data.RecordToken;
+import ptolemy.kernel.CompositeEntity;
+import ptolemy.kernel.util.IllegalActionException;
+import ptolemy.kernel.util.NameDuplicationException;
+
+import lsi.noc.application.Producer;
+
+/**
+ * @author Osmar Marchi dos Santos
+ * @version 1.0 (York, 11/8/2010)
+ * @version 1.1 (York, 12/8/2010) by LSI
+ **/
+
+public class PBProducer extends Producer {
+
+	// Used for the Basic Priority Scheduler
+	protected BasicPriorityScheduler scheduler;
+
+	// Used to generate an interrupt for the Basic Priority Scheduler
+	protected Time interruptTime;
+
+	// Class reference to the packet being transmitted
+	private RecordToken packet = null;
+
+	public PBProducer(CompositeEntity container, String name)
+			throws NameDuplicationException, IllegalActionException {
+		super(container, name);
+		// TODO Auto-generated constructor stub
+	}
+
+	public void initialize() throws IllegalActionException {
+		super.initialize();
+
+		// Create the BasicPriorityScheduler
+		// In this version, the number of priority queues in the scheduler are
+		// fixed.
+		// TODO: The scheduler should be more flexible for dealing with the
+		// priorities.
+		scheduler = new BasicPriorityScheduler(100, this);
+
+		// Until the scheduler calls the setTimer method,
+		// the interrupt time is considered to be the current time - 1
+		interruptTime = getDirector().getModelTime();
+		interruptTime = interruptTime.subtract(0.1);
+	}
+
+	public boolean prefire() throws IllegalActionException {
+
+		if (_debugging)
+			_debug("Pre fire: current time = "
+					+ getDirector().getModelTime().getDoubleValue());
+		if (_debugging)
+			_debug("Pre fire: interrupt time = "
+					+ interruptTime.getDoubleValue());
+		if (_debugging)
+			_debug("Producer = " + this.toString());
+
+		// If the current time equals the interrupt time, interrupt the
+		// scheduler
+		// We can use equal since time is exact in the simulation
+		if (getDirector().getModelTime().getDoubleValue() == interruptTime
+				.getDoubleValue()) {
+			scheduler.interrupt();
+		}
+		return true;
+	}
+
+	public void fire() throws IllegalActionException {
+		if (packet != null) {
+			data_out.send(0, packet);
+			// Make sure that the packet value, after the transmission is null,
+			// otherwise
+			// the packet could be retransmitted every time the scheduler is
+			// called
+			packet = null;
+		}
+	}
+
+	// This method has to be defined due to its definition on the Producer class
+	// If priority is not given, assume highest (0)
+	public void sendPacket(Token token, int x, int y, int id,
+			int totalPacketSize, int subPacketSize, Token delay)
+			throws IllegalActionException {
+		sendPacket(token, x, y, id, totalPacketSize, subPacketSize, delay, 0);
+
+	}
+
+	public void sendPacket(Token token, int x, int y, int id, int size,
+			int subPacketSize, Token compDelay, int priority) {
+
+		if (_debugging)
+			_debug("message request received from mapper: add process to scheduler");
+
+		// Add process to the scheduler with all the paremeters passed from the
+		// mapper
+		scheduler.addProcess(token, x, y, id, size, subPacketSize,
+				Double.valueOf(compDelay.toString()), priority);
+	}
+
+	public void sendPacket(Token token, int x, int y, int id, int size,
+			int subPacketSize, int priority, double releaseTime)
+			throws IllegalActionException {
+
+		if (_debugging)
+			_debug("message request received from scheduler");
+
+		packet = createPacket(x, y, id, token, size, true, releaseTime,
+				priority);
+	}
+
+	// Set the timer to interrupt the scheduler
+	public void setTimer(double nextInterruptTime) {
+
+		if (_debugging)
+			_debug("Set Timer: nextInterruptTime = " + nextInterruptTime);
+
+		interruptTime = getDirector().getModelTime();
+
+		if (_debugging)
+			_debug("Set Timer: current time = "
+					+ getDirector().getModelTime().getDoubleValue());
+		if (_debugging)
+			_debug("Set Timer: interrupt time = "
+					+ interruptTime.getDoubleValue());
+		if (_debugging)
+			_debug("Set Timer: created interrupt time (added value) = "
+					+ interruptTime.add(nextInterruptTime).getDoubleValue());
+
+		interruptTime = interruptTime.add(nextInterruptTime);
+
+		try {
+			getDirector().fireAt(this, interruptTime);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	public void pruneDependencies() {
+		super.pruneDependencies();
+
+		removeDependency(data_out, ack_in);
+	}
+}

@@ -1,0 +1,16 @@
+package lsi.noc.purplepringle;
+
+import ptolemy.actor.util.Time;
+import lsi.noc.kernel.priority.PriorityTrafficFlow;
+
+public interface FlowTableController {
+	
+	abstract FlowTable getFlowTable();
+	abstract void setFlowTable(FlowTable t);
+	abstract boolean addFiringRequest(Time time);
+	abstract void notifyFlowCompletion(PriorityTrafficFlow flow);
+	abstract double getHopLatency();
+	abstract double getRoutingLatency();
+	
+
+}

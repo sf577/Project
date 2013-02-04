@@ -1,0 +1,354 @@
+package lsi.noc.kernel.priority;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Hashtable;
+
+import lsi.noc.kernel.Flow;
+import lsi.noc.kernel.Route;
+import lsi.noc.kernel.SimpleCommunication;
+import lsi.noc.kernel.Task;
+
+/**
+ * @author Osmar Marchi dos Santos, Leandro Soares Indrusiak
+ * @version 2.0 (York, 19/1/2011)
+ * 
+ * @author Leandro Soares Indrusiak
+ * @version 1.0 (York, 29/3/2010)
+ * 
+ * 
+ * 
+ *          Models priority-arbitrated traffic flows in NoC interconnects, as
+ *          described in:
+ * 
+ *          Zheng Shi, Alan Burns, Leandro Soares Indrusiak Schedulability
+ *          Analysis for Real Time On-Chip Communication with Wormhole Switching
+ *          Int. Journal of Embedded and Real-Time Communication Systems, 2010.
+ * 
+ *          Priority decreases as the numbers increase (i.e. highest priority is
+ *          0).
+ * 
+ * 
+ * 
+ */
+
+public class PriorityTrafficFlow extends SimpleCommunication implements Flow {
+	private PriorityTask destination;
+	private PriorityTask source;
+	Route route;
+	int priority;
+	double period = 0;
+	double releaseJitter = 0;
+	double releaseTime = 0;
+	private double transmissionTime = 0;
+	int payload = 0;
+
+	public PriorityTrafficFlow(PriorityTask s, PriorityTask d) {
+		source = s;
+		destination = d;
+		setPriority(s.getPriority());
+
+	}
+
+	public PriorityTrafficFlow(Route r, int i) {
+		route = r;
+		priority = i;
+
+	}
+
+	public void setSourceTask(PriorityTask source) {
+		this.source = source;
+	}
+
+	public PriorityTask getSourceTask() {
+		return source;
+	}
+
+	public void setRoute(Route r) {
+		route = r;
+	}
+
+	public Route getRoute() {
+		return route;
+	}
+
+	public int getPayload() {
+		return payload;
+	}
+
+	public void setPayload(int payload) {
+		this.payload = payload;
+	}
+
+	public double getReleaseJitter() {
+		return releaseJitter;
+	}
+
+	public void setReleaseJitter(double releaseJitter) {
+		this.releaseJitter = releaseJitter;
+		// System.out.println(this.releaseJitter);
+	}
+
+	public int getPriority() {
+
+		return priority;
+
+	}
+
+	public void setPriority(int i) {
+
+		this.priority = i;
+
+	}
+
+	public double getPeriod() {
+
+		return period;
+
+	}
+
+	public void setPeriod(double i) {
+
+		this.period = i;
+
+	}
+
+	public boolean isPeriodic() {
+
+		if (period > 0) {
+			return true;
+		} else {
+			return false;
+		}
+
+	}
+
+	// Receives a set of traffic flows.
+	// Returns a list of all traffic flows that can cause interference on the
+	// traffic in question.
+	// This means, all traffics that
+	// - have higher (or equal) priority than the traffic in question
+	// AND
+	// - share at least one link with the traffic in question
+	public ArrayList<PriorityTrafficFlow> getDirectInterferenceSet(
+			ArrayList<PriorityTrafficFlow> all) {
+
+		ArrayList<PriorityTrafficFlow> subset = new ArrayList<PriorityTrafficFlow>();
+
+		for (int i = 0; i < all.size(); i++) {
+			PriorityTrafficFlow tf = all.get(i);
+			if (!equals(tf) && tf.getPriority() <= this.getPriority()) {
+				if (getRoute().intersects(tf.getRoute())) {
+					subset.add(tf);
+				}
+			}
+		}
+		return subset;
+	}
+
+	/*
+	 * Receives a set of traffic flows. Returns a list of all traffic flows that
+	 * can cause interference on the traffics that interfere with the traffic in
+	 * question. This means, all traffics that - have higher (or equal) priority
+	 * than the traffics that interfere with the traffic in question AND - don't
+	 * share links with the traffic in question
+	 */
+	public ArrayList<PriorityTrafficFlow> getIndirectInterferenceSet(
+			ArrayList<PriorityTrafficFlow> all) {
+		ArrayList<PriorityTrafficFlow> subset = new ArrayList<PriorityTrafficFlow>();
+		ArrayList<PriorityTrafficFlow> direct = getDirectInterferenceSet(all);
+		for (int i = 0; i < all.size(); i++) {
+			PriorityTrafficFlow tf = all.get(i);
+			if (!equals(tf) && !direct.contains(tf)) {
+				for (int j = 0; j < direct.size(); j++) {
+					if (tf.getPriority() <= direct.get(j).getPriority()
+							&& direct.get(j).getRoute()
+									.intersects(tf.getRoute())) {
+						subset.add(tf);
+					}
+				}
+			}
+		}
+		return subset;
+	}
+
+	// returns the communication latency in case there's no interference
+	public double getBasicLatency(double hopLatency, double routingLatency) {
+
+		double basiclatency = 0;
+
+		int hops = route.getHopCount();
+
+		int routers = hops - 1;
+
+		basiclatency = hopLatency * hops + routingLatency * routers
+				+ hopLatency * (payload);
+
+		return basiclatency;
+
+	}
+
+	public double getUtilization(double hopLatency, double routingLatency) {
+
+		return this.getBasicLatency(hopLatency, routingLatency)
+				/ this.getPeriod();
+	}
+
+	/*
+	 * calculates the worst case communication latency only considering the
+	 * direct interference
+	 */
+	public double getDirectInterferenceWorstCaseLatency(double hopLatency,
+			double routingLatency, ArrayList<PriorityTrafficFlow> all) {
+		double wl = this.getBasicLatency(hopLatency, routingLatency);
+		ArrayList<PriorityTrafficFlow> sdi = this.getDirectInterferenceSet(all);
+		double wlcopy;
+		do {
+			wlcopy = wl;
+			BigDecimal interf = new BigDecimal(0);
+			for (int i = 0; i < sdi.size(); i++) {
+				PriorityTrafficFlow flowj = sdi.get(i);
+				BigDecimal mult;
+				// Previous WC + release jitter (of the higher priority flow)
+				mult = new BigDecimal((int) Math.ceil(((wlcopy + flowj
+						.getReleaseJitter()) / flowj.getPeriod())));
+				// Finds the number of times the higher priority flow "hits"
+				// this flow
+				interf = interf.add(mult.multiply(new BigDecimal(
+						1000000000 * (flowj.getBasicLatency(hopLatency,
+								routingLatency)))));
+			}
+			// The current iteration is the sum of all interferences + the
+			// computation time of the current flow
+			wl = new BigDecimal(1000000000 * getBasicLatency(hopLatency,
+					routingLatency)).add(interf).doubleValue() / 1000000000;
+		} while (wl != wlcopy && wl <= getPeriod());
+
+		// Add to the worst-case the release jitter of the task
+		// This defines the actual response-time of the task
+		// TODO: Is that actually correct? Could the flow come to suffer other
+		// hits?
+		wl += getReleaseJitter();
+
+		// Considering deadline = period, the code below is correct:
+		if (wl > this.getPeriod()) {
+			return Double.MAX_VALUE;
+		}
+		return wl;
+	}
+
+	/*
+	 * calculates the worst case communication latency due to direct and
+	 * indirect interference
+	 */
+
+	public double getWorstCaseLatency(double hopLatency, double routingLatency,
+			ArrayList<PriorityTrafficFlow> all) {
+		double wl = this.getBasicLatency(hopLatency, routingLatency);
+		ArrayList<PriorityTrafficFlow> sdi = this.getDirectInterferenceSet(all);
+		ArrayList<PriorityTrafficFlow> sii = this
+				.getIndirectInterferenceSet(all);
+		Hashtable flows = new Hashtable();
+		for (int i = 0; i < sdi.size(); i++) {
+			PriorityTrafficFlow f = sdi.get(i);
+			ArrayList<PriorityTrafficFlow> sdj = f
+					.getDirectInterferenceSet(sii);
+			if (sdj.size() > 0) {
+				// If there is indirect interference, calculate it:
+				// worst-case response time for the flow minus its basic latency
+				flows.put(
+						f,
+						new Double((f.getWorstCaseLatency(hopLatency,
+								routingLatency, all) - f.getBasicLatency(
+								hopLatency, routingLatency))));
+			} else {
+				flows.put(f, new Double(0));
+			}
+		}
+		double wlcopy;
+		do {
+			wlcopy = wl;
+			BigDecimal interf = new BigDecimal(0);
+			for (int i = 0; i < sdi.size(); i++) {
+				PriorityTrafficFlow flowj = sdi.get(i);
+				BigDecimal mult;
+				// This is the indirect jitter calculated previously
+				double jitter = (Double) flows.get(flowj);
+				// Previous WC + release jitter (of the higher priority flow) +
+				// indirect jitter
+				mult = new BigDecimal((int) Math.ceil(((wlcopy
+						+ flowj.getReleaseJitter() + jitter) / flowj
+						.getPeriod())));
+				// Finds the number of times the higher priority flow "hits"
+				// this flow
+				interf = interf.add(mult.multiply(new BigDecimal(
+						1000000000 * (flowj.getBasicLatency(hopLatency,
+								routingLatency)))));
+			}
+			// The current iteration is the sum of all interferences + the
+			// computation time of the current flow
+			wl = new BigDecimal(1000000000 * getBasicLatency(hopLatency,
+					routingLatency)).add(interf).doubleValue() / 1000000000;
+		} while (wl != wlcopy && wl <= getPeriod());
+
+		// Add to the worst-case the release jitter of the task
+		// This defines the actual response-time of the task
+		// TODO: Is that actually correct? Could the flow come to suffer other
+		// hits?
+		wl += getReleaseJitter();
+
+		// Considering deadline = period, the code below is correct:
+		if (wl > this.getPeriod()) {
+			return Double.MAX_VALUE;
+		}
+		return wl;
+	}
+
+	public void setDestinationTask(PriorityTask destination) {
+		this.destination = destination;
+	}
+
+	public PriorityTask getDestinationTask() {
+		return destination;
+	}
+
+	@Override
+	public Task getReceiver() {
+		return getDestinationTask();
+	}
+
+	@Override
+	public Task getSender() {
+		return getSourceTask();
+	}
+
+	public Flow getFlow() {
+		return this;
+	}
+
+	public long getVolume() {
+		return getPayload();
+	}
+
+	public void setVolume(long volume) {
+		super.setVolume(volume);
+		setPayload((int) volume);
+	}
+
+	public void setReleaseTime(double releaseTime) {
+		this.releaseTime = releaseTime;
+	}
+
+	public double getReleaseTime() {
+		return releaseTime;
+	}
+
+	void setTransmissionTime(double transmissionTime) {
+		this.transmissionTime = transmissionTime;
+	}
+
+	double getTransmissionTime() {
+		return transmissionTime;
+	}
+
+}

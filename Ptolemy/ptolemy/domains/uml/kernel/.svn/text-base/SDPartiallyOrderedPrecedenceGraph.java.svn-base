@@ -1,0 +1,126 @@
+package ptolemy.domains.uml.kernel;
+
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.TreeSet;
+import java.util.SortedSet;
+import java.util.List;
+import java.util.Vector;
+
+import ptolemy.vergil.uml.Lifeline;
+import ptolemy.vergil.uml.Message;
+import ptolemy.vergil.uml.MessageOccurrenceSpecification;
+import ptolemy.vergil.uml.UMLSeqActor;
+
+/**
+
+@author Leandro Soares Indrusiak
+@version $Id: SDPrecedenceGraph.java,v 1.0 2007/04/03 
+
+*/
+
+public class SDPartiallyOrderedPrecedenceGraph extends SDPrecedenceGraph{
+
+	Hashtable _mapping; // stores all MessageOccurrenceSpecification of each Lifeline using a TreeSet
+	Hashtable _state;   // stores for each Lifeline which MessageOccurrenceSpecification can occurr next
+
+
+
+	
+	public SDPartiallyOrderedPrecedenceGraph(List lifelines, List messages){
+		
+		_mapping = new Hashtable();
+		_state = new Hashtable();
+		_addLifelines(lifelines);
+		_addMessages(messages);
+		
+	}
+	
+	private void _addLifelines(List l){
+
+		Iterator lifelines = l.iterator();
+		while (lifelines.hasNext()) {
+			Lifeline li = (Lifeline)lifelines.next();
+			_mapping.put(li, new TreeSet());
+		}
+	}
+	
+	private void _addMessages(List l){
+		
+		Iterator messages = l.iterator();
+		while (messages.hasNext()) {
+			Message m = (Message)messages.next();
+			MessageOccurrenceSpecification mossend = m.getSendEvent();
+			MessageOccurrenceSpecification mosrec = m.getReceiveEvent();
+			_assignMessageToLifeline(mossend);
+			_assignMessageToLifeline(mosrec);			
+		
+		}
+		
+	}
+	
+	private void _assignMessageToLifeline(MessageOccurrenceSpecification m){
+		Lifeline p = m.getLifeline();
+		TreeSet v = (TreeSet)_mapping.get(p);
+		v.add(m);
+		if(m==v.first()){
+			_state.put(p,m);  // if the MessageOccurrenceSpecification is the first one on the Lifeline, it is the one allowed to occur
+		}
+
+	}
+	
+	
+	public boolean precedenceSatisfied(Message m){
+		
+		MessageOccurrenceSpecification mossend = m.getSendEvent();
+		MessageOccurrenceSpecification mosrec = m.getReceiveEvent();		
+		Lifeline p = mossend.getLifeline();
+		Lifeline q = mosrec.getLifeline();
+		return mossend==getCurrentState(p) && mosrec==getCurrentState(q);
+		
+	}
+	
+	public MessageOccurrenceSpecification getCurrentState(Lifeline l){
+		return (MessageOccurrenceSpecification)_state.get(l);
+	}
+
+	public void incrementState(Lifeline l){
+		
+		TreeSet messagespecs = (TreeSet)_mapping.get(l);
+		MessageOccurrenceSpecification curstate = getCurrentState(l);
+		
+		Vector v = new Vector();
+		v.addAll(messagespecs);
+		int ind = v.indexOf(curstate);
+		MessageOccurrenceSpecification next;
+		//set the next state to the next MessageOccurrenceSpecification in the Lifeline
+		try{
+			next=(MessageOccurrenceSpecification)v.elementAt(ind+1);
+		}
+		catch(ArrayIndexOutOfBoundsException e){
+	
+			// if MessageOccurrenceSpecification is the last in a Lifeline, put the first again
+		    next=(MessageOccurrenceSpecification)messagespecs.first();
+		}
+		
+		_state.put(l, next); 
+				
+	}
+	
+	public void notifyMessageFiring(Message m){
+		
+		MessageOccurrenceSpecification mossend = m.getSendEvent();
+		MessageOccurrenceSpecification mosrec = m.getReceiveEvent();		
+		Lifeline p = mossend.getLifeline();
+		Lifeline q = mosrec.getLifeline();
+		incrementState(p);
+		incrementState(q);
+	}
+
+    @Override
+    public void setFragmentTokens(Hashtable fragmentTokens) {
+        // TODO Auto-generated method stub
+        
+    }
+
+}

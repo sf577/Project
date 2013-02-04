@@ -1,0 +1,83 @@
+package lsi.noc.nocscope;
+
+import java.util.Iterator;
+import java.util.List;
+
+import javax.swing.JFrame;
+
+import ptolemy.actor.IOPort;
+import ptolemy.data.IntToken;
+import ptolemy.data.RecordToken;
+import ptolemy.data.Token;
+import ptolemy.kernel.CompositeEntity;
+import ptolemy.kernel.util.IllegalActionException;
+import ptolemy.kernel.util.NameDuplicationException;
+
+public class ChannelScopeActor extends NoCScopeActor {
+
+	private long max=0;
+	
+	public ChannelScopeActor(CompositeEntity container, String name)
+	throws NameDuplicationException, IllegalActionException  {
+		super(container, name);
+		_frame=new JFrame("ChannelScope");
+
+	}
+	
+	
+	
+	public NoCScope createScope() {
+		return new ChannelScope(nports,maxwidth);
+	}
+
+	
+	
+	public void fire() throws IllegalActionException{
+
+		super.fire();
+
+
+		List l = portList();
+		Iterator ite = l.iterator();
+		int port=0;
+		while(ite.hasNext()){
+			IOPort p = (IOPort)ite.next();
+			if(p.isInput()){
+				int width=p.getWidth();
+				for(int i=0;i<width;i++){
+					if(p.hasToken(i)){
+						Token t = p.get(i);
+						if(t instanceof RecordToken){
+							RecordToken record = (RecordToken) t;
+							int e = ((IntToken)record.get("e")).intValue(); if(e>max)max=e;
+							int w = ((IntToken)record.get("w")).intValue(); if(w>max)max=w;
+							int n = ((IntToken)record.get("n")).intValue(); if(n>max)max=n;
+							int s = ((IntToken)record.get("s")).intValue(); if(s>max)max=s;
+							int local = ((IntToken)record.get("local")).intValue(); if(local>max)max=local;
+
+							((ChannelScope)_nocscope).getSwitch(port, i).setEast(e);
+							((ChannelScope)_nocscope).getSwitch(port, i).setWest(w);
+							((ChannelScope)_nocscope).getSwitch(port, i).setNorth(n);
+							((ChannelScope)_nocscope).getSwitch(port, i).setSouth(s);
+							((ChannelScope)_nocscope).getSwitch(port, i).setLocal(local);
+							((ChannelScope)_nocscope).getSwitch(port, i).setMaxSize(max);
+							
+
+						}
+					}
+
+				}
+
+
+			}
+			port++;
+		}
+		
+		_nocscope.repaint();
+
+	}
+
+	
+	
+	
+}

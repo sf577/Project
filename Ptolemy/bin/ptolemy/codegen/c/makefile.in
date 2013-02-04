@@ -1,0 +1,41 @@
+# Template makefile from $PTII/ptolemy/codegen/c/makefile.in
+# $Id: makefile.in,v 1.8.2.1 2007/01/06 06:31:48 cxh Exp $
+# The CodeGenerator class subsitutes strings like "@modelName@" with
+# the value of parameters and writes the results in the directory
+# where the source code is created.
+# To compile, run make -f @modelName@.mk
+
+PTCGLIBRARIES = @PTCGLibraries@
+PTCGINCLUDES = @PTCGIncludes@
+
+# Under Windows, to create a binary that does not pop up a console window,
+# compile with: make -f @modelName@.mk CC_FLAGS=-mwindows
+CC_FLAGS=
+
+# If the user would like to add compile time options, run with
+# make -f @modelName@.mk USER_CC_FLAGS=xxx
+USER_CC_FLAGS =
+
+# We need -lm so we can get floor() for ftoi() 
+# We need -D__int64="long long" when invoking jni interface under cygwin
+@modelName@: @modelName@.c
+	gcc -D__int64="long long" $(CC_FLAGS) $(USER_CC_FLAGS) -g @modelName@.c $(PTCGINCLUDES) -o @modelName@ -lm $(PTCGLIBRARIES)
+
+# Rule to compile with different optimizers
+O_FLAGS=-O0 -O -Os -O2 -O3
+optimize:
+	for O_FLAG in $(O_FLAGS); do \
+	    echo "Compiling with $$O_FLAG"; \
+	    time gcc $$O_FLAG -D__int64="long long" $(CC_FLAGS) $(USER_CC_FLAGS) -g @modelName@.c $(PTCGINCLUDES) -o @modelName@_$$O_FLAG -lm $(PTCGLIBRARIES); \
+	    cp @modelName@_$${O_FLAG}.exe @modelName@_$${O_FLAG}_stripped.exe; \
+	    strip @modelName@_$${O_FLAG}_stripped.exe; \
+	    ls -l @modelName@_$${O_FLAG}.exe @modelName@_$${O_FLAG}_stripped.exe; \
+	    echo "Running @modelName@_$${O_FLAG}.exe"; \
+	    time @modelName@_$${O_FLAG}.exe; \
+	    time @modelName@_$${O_FLAG}.exe; \
+	    time @modelName@_$${O_FLAG}.exe; \
+	    echo "Running @modelName@_$${O_FLAG}_stripped.exe"; \
+	    time @modelName@_$${O_FLAG}_stripped.exe; \
+	    time @modelName@_$${O_FLAG}_stripped.exe; \
+	    time @modelName@_$${O_FLAG}_stripped.exe; \
+	done	

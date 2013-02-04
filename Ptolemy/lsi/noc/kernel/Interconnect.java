@@ -1,0 +1,29 @@
+package lsi.noc.kernel;
+
+import java.util.ArrayList;
+
+/* 
+ * @author      Leandro Soares Indrusiak
+ * @version 1.0 (York, 25/09/2009) 
+ */
+
+public abstract class Interconnect {
+
+	ArrayList<ProcessingCore> cores;
+	ArrayList<Link> links;
+
+	public Interconnect() {
+		cores = new ArrayList<ProcessingCore>();
+		links = new ArrayList<Link>();
+
+	}
+
+	public ArrayList<ProcessingCore> getCores() {
+		return cores;
+	}
+
+	public ArrayList<Link> getLinks() {
+		return links;
+	}
+
+}

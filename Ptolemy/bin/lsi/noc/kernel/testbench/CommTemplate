@@ -1,0 +1,242 @@
+"    <entity name=\"0-POSI-NAVC\" class=\"ptolemy.vergil.uml.UMLSeqActor\">"+
+"        <property name=\"_tableauFactory\" class=\"ptolemy.vergil.uml.UMLTableauFactory\">"+
+"        </property>"+
+"        <property name=\"Lifeline\" class=\"ptolemy.vergil.uml.Lifeline\" value=\"\">"+
+"            <property name=\"nameUML\" class=\"ptolemy.kernel.util.StringAttribute\" value=\"POSI\">"+
+"            </property>"+
+"            <property name=\"location\" class=\"ptolemy.kernel.util.Location\" value=\"{185.0, 30.0}\">"+
+"            </property>"+
+"            <property name=\"LifelineIcon\" class=\"ptolemy.vergil.uml.LifelineIcon\">"+
+"                <property name=\"image\" class=\"ptolemy.vergil.kernel.attributes.ImageAttribute\">"+
+"                    <property name=\"_hideName\" class=\"ptolemy.data.expr.SingletonParameter\" value=\"true\">"+
+"                    </property>"+
+"                    <property name=\"_hideAllParameters\" class=\"ptolemy.data.expr.Parameter\" value=\"true\">"+
+"                    </property>"+
+"                    <property name=\"source\" class=\"ptolemy.data.expr.FileParameter\" value=\"$PTII/ptolemy/vergil/uml/Lifeline.gif\">"+
+"                    </property>"+
+"                    <property name=\"scale\" class=\"ptolemy.data.expr.Parameter\" value=\"100.0\">"+
+"                    </property>"+
+"                </property>"+
+"            </property>"+
+"        </property>"+
+"        <property name=\"Lifeline2\" class=\"ptolemy.vergil.uml.Lifeline\" value=\"\">"+
+"            <property name=\"nameUML\" class=\"ptolemy.kernel.util.StringAttribute\" value=\"NAVC\">"+
+"            </property>"+
+"            <property name=\"location\" class=\"ptolemy.kernel.util.Location\" value=\"{390.0, 30.0}\">"+
+"            </property>"+
+"            <property name=\"LifelineIcon\" class=\"ptolemy.vergil.uml.LifelineIcon\">"+
+"                <property name=\"image\" class=\"ptolemy.vergil.kernel.attributes.ImageAttribute\">"+
+"                    <property name=\"_hideName\" class=\"ptolemy.data.expr.SingletonParameter\" value=\"true\">"+
+"                    </property>"+
+"                    <property name=\"_hideAllParameters\" class=\"ptolemy.data.expr.Parameter\" value=\"true\">"+
+"                    </property>"+
+"                    <property name=\"source\" class=\"ptolemy.data.expr.FileParameter\" value=\"$PTII/ptolemy/vergil/uml/Lifeline.gif\">"+
+"                    </property>"+
+"                    <property name=\"scale\" class=\"ptolemy.data.expr.Parameter\" value=\"100.0\">"+
+"                    </property>"+
+"                </property>"+
+"            </property>"+
+"        </property>"+
+"        <property name=\"m\" class=\"ptolemy.vergil.uml.Message\" value=\"\">"+
+"            <property name=\"nameUML\" class=\"ptolemy.kernel.util.StringAttribute\" value=\"m\">"+
+"            </property>"+
+"            <property name=\"msgSort\" class=\"ptolemy.data.expr.Parameter\" value=\"0\">"+
+"            </property>"+
+"            <property name=\"receiveEvent\" class=\"ptolemy.vergil.uml.MessageOccurrenceSpecification\" value=\"ReceiveEvent\">"+
+"                <property name=\"location\" class=\"ptolemy.kernel.util.Location\" value=\"{0.0, 117.0}\">"+
+"                </property>"+
+"                <property name=\"Lifeline2\" class=\"ptolemy.vergil.uml.Lifeline\" value=\"\">"+
+"                    <property name=\"location\" class=\"ptolemy.kernel.util.Location\" value=\"{390.0, 30.0}\">"+
+"                    </property>"+
+"                </property>"+
+"            </property>"+
+"            <property name=\"sendEvent\" class=\"ptolemy.vergil.uml.MessageOccurrenceSpecification\" value=\"SendEvent\">"+
+"                <property name=\"location\" class=\"ptolemy.kernel.util.Location\" value=\"{0.0, 117.0}\">"+
+"                </property>"+
+"                <property name=\"Lifeline\" class=\"ptolemy.vergil.uml.Lifeline\" value=\"\">"+
+"                    <property name=\"location\" class=\"ptolemy.kernel.util.Location\" value=\"{185.0, 30.0}\">"+
+"                    </property>"+
+"                </property>"+
+"            </property>"+
+"            <property name=\"preCompTime\" class=\"ptolemy.data.expr.Parameter\" value=\"0.0050\">"+
+"            </property>"+
+"            <property name=\"totalPacketSize\" class=\"ptolemy.data.expr.Parameter\" value=\"1024\">"+
+"            </property>"+
+"            <property name=\"subPacketSize\" class=\"ptolemy.data.expr.Parameter\" value=\"500000\">"+
+"            </property>"+
+"            <property name=\"priority\" class=\"ptolemy.data.expr.Parameter\" value=\"31\">"+
+"            </property>"+
+"            <property name=\"delay\" class=\"ptolemy.data.expr.Parameter\" value=\"0.0050\">"+
+"            </property>"+
+"            <property name=\"size\" class=\"ptolemy.data.expr.Parameter\" value=\"\">"+
+"            </property>"+
+"        </property>"+
+"        <property name=\"Partial Order\" class=\"lsi.noc.application.uml.directors.PartialOrder\">"+
+"            <property name=\"_location\" class=\"ptolemy.kernel.util.Location\" value=\"{60, 75}\">"+
+"            </property>"+
+"        </property>"+
+"        <property name=\"_location\" class=\"ptolemy.kernel.util.Location\" value=\"{0.0, 0.0}\">"+
+"        </property>"+
+"        <property name=\"_icon\" class=\"ptolemy.vergil.icon.EditorIcon\">"+
+"        </property>"+
+"        <port name=\"m_send_m\" class=\"ptolemy.vergil.uml.BehavioralPatternPort\">"+
+"            <property name=\"input\"/>"+
+"            <property name=\"m\" class=\"ptolemy.vergil.uml.Message\" value=\"\">"+
+"            </property>"+
+"            <property name=\"_showName\" class=\"ptolemy.data.expr.SingletonParameter\" value=\"true\">"+
+"            </property>"+
+"            <property name=\"_location\" class=\"ptolemy.kernel.util.Location\" value=\"-10.0,-10.0\">"+
+"            </property>"+
+"        </port>"+
+"        <port name=\"m_receive_m\" class=\"ptolemy.vergil.uml.BehavioralPatternPort\">"+
+"            <property name=\"output\"/>"+
+"            <property name=\"_location\" class=\"ptolemy.kernel.util.Location\" value=\"-10.0,-10.0\">"+
+"            </property>"+
+"            <property name=\"m\" class=\"ptolemy.vergil.uml.Message\" value=\"\">"+
+"            </property>"+
+"            <property name=\"_showName\" class=\"ptolemy.data.expr.SingletonParameter\" value=\"true\">"+
+"            </property>"+
+"        </port>"+
+"        <relation name=\"m\" class=\"ptolemy.actor.TypedIORelation\">"+
+"            <property name=\"width\" class=\"ptolemy.data.expr.Parameter\" value=\"1\">"+
+"            </property>"+
+"        </relation>"+
+"        <link port=\"m_send_m\" relation=\"m\"/>"+
+"        <link port=\"m_receive_m\" relation=\"m\"/>"+
+"    </entity>"+
+"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <entity name=\"0-POSI-NAVC\" class=\"ptolemy.vergil.uml.UMLSeqActor\">
+        <property name=\"_tableauFactory\" class=\"ptolemy.vergil.uml.UMLTableauFactory\">
+        </property>
+        <property name=\"Lifeline\" class=\"ptolemy.vergil.uml.Lifeline\" value=\"\">
+            <property name=\"nameUML\" class=\"ptolemy.kernel.util.StringAttribute\" value=\"POSI\">
+            </property>
+            <property name=\"location\" class=\"ptolemy.kernel.util.Location\" value=\"{185.0, 30.0}\">
+            </property>
+            <property name=\"LifelineIcon\" class=\"ptolemy.vergil.uml.LifelineIcon\">
+                <property name=\"image\" class=\"ptolemy.vergil.kernel.attributes.ImageAttribute\">
+                    <property name=\"_hideName\" class=\"ptolemy.data.expr.SingletonParameter\" value=\"true\">
+                    </property>
+                    <property name=\"_hideAllParameters\" class=\"ptolemy.data.expr.Parameter\" value=\"true\">
+                    </property>
+                    <property name=\"source\" class=\"ptolemy.data.expr.FileParameter\" value=\"$PTII/ptolemy/vergil/uml/Lifeline.gif\">
+                    </property>
+                    <property name=\"scale\" class=\"ptolemy.data.expr.Parameter\" value=\"100.0\">
+                    </property>
+                </property>
+            </property>
+        </property>
+        <property name=\"Lifeline2\" class=\"ptolemy.vergil.uml.Lifeline\" value=\"\">
+            <property name=\"nameUML\" class=\"ptolemy.kernel.util.StringAttribute\" value=\"NAVC\">
+            </property>
+            <property name=\"location\" class=\"ptolemy.kernel.util.Location\" value=\"{390.0, 30.0}\">
+            </property>
+            <property name=\"LifelineIcon\" class=\"ptolemy.vergil.uml.LifelineIcon\">
+                <property name=\"image\" class=\"ptolemy.vergil.kernel.attributes.ImageAttribute\">
+                    <property name=\"_hideName\" class=\"ptolemy.data.expr.SingletonParameter\" value=\"true\">
+                    </property>
+                    <property name=\"_hideAllParameters\" class=\"ptolemy.data.expr.Parameter\" value=\"true\">
+                    </property>
+                    <property name=\"source\" class=\"ptolemy.data.expr.FileParameter\" value=\"$PTII/ptolemy/vergil/uml/Lifeline.gif\">
+                    </property>
+                    <property name=\"scale\" class=\"ptolemy.data.expr.Parameter\" value=\"100.0\">
+                    </property>
+                </property>
+            </property>
+        </property>
+        <property name=\"m\" class=\"ptolemy.vergil.uml.Message\" value=\"\">
+            <property name=\"nameUML\" class=\"ptolemy.kernel.util.StringAttribute\" value=\"m\">
+            </property>
+            <property name=\"msgSort\" class=\"ptolemy.data.expr.Parameter\" value=\"0\">
+            </property>
+            <property name=\"receiveEvent\" class=\"ptolemy.vergil.uml.MessageOccurrenceSpecification\" value=\"ReceiveEvent\">
+                <property name=\"location\" class=\"ptolemy.kernel.util.Location\" value=\"{0.0, 117.0}\">
+                </property>
+                <property name=\"Lifeline2\" class=\"ptolemy.vergil.uml.Lifeline\" value=\"\">
+                    <property name=\"location\" class=\"ptolemy.kernel.util.Location\" value=\"{390.0, 30.0}\">
+                    </property>
+                </property>
+            </property>
+            <property name=\"sendEvent\" class=\"ptolemy.vergil.uml.MessageOccurrenceSpecification\" value=\"SendEvent\">
+                <property name=\"location\" class=\"ptolemy.kernel.util.Location\" value=\"{0.0, 117.0}\">
+                </property>
+                <property name=\"Lifeline\" class=\"ptolemy.vergil.uml.Lifeline\" value=\"\">
+                    <property name=\"location\" class=\"ptolemy.kernel.util.Location\" value=\"{185.0, 30.0}\">
+                    </property>
+                </property>
+            </property>
+            <property name=\"preCompTime\" class=\"ptolemy.data.expr.Parameter\" value=\"0.0050\">
+            </property>
+            <property name=\"totalPacketSize\" class=\"ptolemy.data.expr.Parameter\" value=\"1024\">
+            </property>
+            <property name=\"subPacketSize\" class=\"ptolemy.data.expr.Parameter\" value=\"500000\">
+            </property>
+            <property name=\"priority\" class=\"ptolemy.data.expr.Parameter\" value=\"31\">
+            </property>
+            <property name=\"delay\" class=\"ptolemy.data.expr.Parameter\" value=\"0.0050\">
+            </property>
+            <property name=\"size\" class=\"ptolemy.data.expr.Parameter\" value=\"\">
+            </property>
+        </property>
+        <property name=\"Partial Order\" class=\"lsi.noc.application.uml.directors.PartialOrder\">
+            <property name=\"_location\" class=\"ptolemy.kernel.util.Location\" value=\"{60, 75}\">
+            </property>
+        </property>
+        <property name=\"_location\" class=\"ptolemy.kernel.util.Location\" value=\"{0.0, 0.0}\">
+        </property>
+        <property name=\"_icon\" class=\"ptolemy.vergil.icon.EditorIcon\">
+        </property>
+        <port name=\"m_send_m\" class=\"ptolemy.vergil.uml.BehavioralPatternPort\">
+            <property name=\"input\"/>
+            <property name=\"m\" class=\"ptolemy.vergil.uml.Message\" value=\"\">
+            </property>
+            <property name=\"_showName\" class=\"ptolemy.data.expr.SingletonParameter\" value=\"true\">
+            </property>
+            <property name=\"_location\" class=\"ptolemy.kernel.util.Location\" value=\"-10.0,-10.0\">
+            </property>
+        </port>
+        <port name=\"m_receive_m\" class=\"ptolemy.vergil.uml.BehavioralPatternPort\">
+            <property name=\"output\"/>
+            <property name=\"_location\" class=\"ptolemy.kernel.util.Location\" value=\"-10.0,-10.0\">
+            </property>
+            <property name=\"m\" class=\"ptolemy.vergil.uml.Message\" value=\"\">
+            </property>
+            <property name=\"_showName\" class=\"ptolemy.data.expr.SingletonParameter\" value=\"true\">
+            </property>
+        </port>
+        <relation name=\"m\" class=\"ptolemy.actor.TypedIORelation\">
+            <property name=\"width\" class=\"ptolemy.data.expr.Parameter\" value=\"1\">
+            </property>
+        </relation>
+        <link port=\"m_send_m\" relation=\"m\"/>
+        <link port=\"m_receive_m\" relation=\"m\"/>
+    </entity>

@@ -1,0 +1,107 @@
+package ptolemy.vergil.uml;
+
+import java.awt.geom.Point2D;
+
+import ptolemy.kernel.util.Location;
+import ptolemy.vergil.basic.NamedObjController;
+import diva.canvas.CanvasUtilities;
+import diva.canvas.Figure;
+import diva.canvas.FigureLayer;
+import diva.graph.GraphController;
+import diva.graph.GraphViewEvent;
+import diva.graph.NodeInteractor;
+import diva.graph.NodeRenderer;
+
+/**
+ * A NodeController for nodes that represent CombinedFragments. Handle proper
+ * rendering of these nodes.
+ * 
+ * @author Andreas Thuy
+ * 
+ */
+public class CombFragNodeController extends NamedObjController {
+
+	public class CombFragNodeRenderer implements NodeRenderer {
+
+		public CombFragNodeRenderer() {
+			super();
+		}
+
+		public Figure render(Object node) {
+			CombFragFigure combFragFigure = null;
+			if (node instanceof Location) {
+				if (((Location) node).getContainer() instanceof CombinedFragment) {
+					CombinedFragment combFrag = (CombinedFragment) ((Location) node)
+							.getContainer();
+
+					combFragFigure = new CombFragFigure(combFrag.getLocation()
+							.getLocation()[0], combFrag.getLocation()
+							.getLocation()[1], combFrag.getWidth(),
+							combFrag.getHeigth(), combFrag.getOp());
+				}
+			}
+			return combFragFigure;
+		}
+
+	}
+
+	public CombFragNodeController(GraphController controller) {
+		super(controller);
+
+		((NodeInteractor) getNodeInteractor())
+				.setDragInteractor(new CombFragNodeInteractor(this));
+
+		CombFragManipulator manipulierer = new CombFragManipulator();
+		((NodeInteractor) getNodeInteractor())
+				.setPrototypeDecorator(manipulierer);
+
+		setNodeRenderer(new CombFragNodeRenderer());
+	}
+
+	// created with the help of the Copy & Paste antipattern
+	// source: BasicNodeController and LocatableNodeController
+	// unlike in these base classes, this figure here shall be added
+	// to the background-layer!
+	public Figure drawNode(Object node) {
+
+		// from BasicNodeController
+		Figure oldFigure = getController().getFigure(node);
+
+		// Infer the location for the new node.
+		Point2D center;
+		if (oldFigure != null) {
+			center = oldFigure.getOrigin();
+			clearNode(node);
+		} else {
+			// no previous figure. which means that we are probably
+			// rendering for the first time.
+			center = null; // FIXME: layout?
+		}
+
+		Figure newFigure = _renderNode(node);
+
+		FigureLayer blackground = (FigureLayer) getController().getGraphPane()
+				.getBackgroundLayer();
+
+		if (!blackground.isEnabled()) {
+			blackground.setEnabled(true);
+			blackground.setVisible(true);
+		}
+		blackground.add(newFigure);
+
+		if (center != null) {
+			// place the new figure where the old one was, if there
+			// was an old figure.
+			CanvasUtilities
+					.translateTo(newFigure, center.getX(), center.getY());
+		}
+
+		getController().dispatch(
+				new GraphViewEvent(this, GraphViewEvent.NODE_DRAWN, node));
+
+		// from LocatableNodeController
+		locateFigure(node);
+
+		return newFigure;
+	}
+}

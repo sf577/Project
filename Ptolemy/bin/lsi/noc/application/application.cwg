@@ -1,0 +1,66 @@
+#_NoC_Size (lines columns) 
+4 4
+
+#_CWG_Graphic (list of: core x y) 
+MC 100 630 
+ME 140 590 
+RI 180 550 
+FB2 220 510 
+FB1 260 470 
+IP 300 430 
+Photo 340 390 
+PC 380 350 
+SI 420 310 
+DC 460 270 
+OD 500 230 
+PA0 540 190 
+PA1 580 150 
+PA2 620 110 
+PA3 660 70 
+PC2 700 30 
+
+ #_CWG_Vertices (list of: vertices) 
+MC ME RI FB2 FB1 IP Photo PC SI DC OD PA0 PA1 PA2 PA3 PC2 
+
+#_CWG_Edges (list of: sourceVertex - targetVertex numberOfPhitsTransmited) 
+RI - MC 100 
+IP - FB2 100 
+SI - MC 300 
+IP - FB1 100 
+MC - IP 100 
+FB1 - IP 5000 
+MC - OD 100 
+IP - Photo 100 
+PA0 - ME 76800 
+PA2 - ME 76800 
+SI - OD 200 
+OD - Photo 100 
+OD - SI 100 
+OD - MC 4000 
+ME - PA3 76800 
+ME - PA2 76800 
+Photo - IP 100 
+ME - PA1 76800 
+ME - PA0 76800 
+PA3 - PA2 240 
+PA3 - PA1 320 
+PA2 - PA0 320 
+PA1 - PA0 240 
+Photo - OD 600 
+PC2 - PA3 128 
+FB2 - IP 5000 
+PC2 - PA2 128 
+PC2 - PA1 128 
+PC2 - PA0 128 
+PA1 - ME 76800 
+MC - DC 300 
+PA3 - ME 76800 
+MC - SI 100 
+PC - MC 200 
+DC - MC 300 
+PA3 - PC2 128 
+MC - PC 200 
+IP - RI 5000 
+PA0 - PC2 128 
+PA2 - PC2 128 
+PA1 - PC2 128 

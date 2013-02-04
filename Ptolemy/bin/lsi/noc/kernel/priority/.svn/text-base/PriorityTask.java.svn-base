@@ -1,0 +1,179 @@
+package lsi.noc.kernel.priority;
+
+/**
+ * @author Leandro Soares Indrusiak
+ * @version 1.0 (York, 31/3/2010)
+ *
+ *
+ *
+ */
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+
+import lsi.noc.kernel.ProcessingCore;
+import lsi.noc.kernel.Task;
+
+public class PriorityTask extends lsi.noc.kernel.GroupableTask{
+
+
+	private int priority;
+	private double period=0;
+	private double releaseJitter=0;
+	private double compTime=0;
+
+
+
+
+	public PriorityTask (int priority, double computation){
+
+		super();
+		this.setPriority(priority);
+		this.setCompTime(computation);
+
+
+
+	}
+
+	public void setCompTime(double compTime) {
+		this.compTime = compTime;
+	}
+
+	public double getCompTime() {
+		return compTime;
+	}
+
+	public void setReleaseJitter(double releaseJitter) {
+		this.releaseJitter = releaseJitter;
+	}
+
+	public double getReleaseJitter() {
+		return releaseJitter;
+	}
+
+	public void setPeriod(double period) {
+		this.period = period;
+	}
+
+	public double getPeriod() {
+		return period;
+	}
+
+	public double getDeadline(){
+		return getPeriod();
+	}
+
+	public void setPriority(int priority) {
+		this.priority = priority;
+	}
+
+	public int getPriority() {
+		return priority;
+	}
+
+
+
+
+	public ArrayList<PriorityTask> getInterferenceSet(ArrayList<PriorityTask> allTasks){
+
+		ArrayList<PriorityTask> subset = new ArrayList<PriorityTask>();
+
+		for(int i=0;i<allTasks.size();i++){
+			PriorityTask t = allTasks.get(i);
+			if(this.getCore().equals(t.getCore())){
+				if(!this.equals(t) && t.getPriority() <= this.getPriority()){
+					subset.add(t);
+				}
+			}
+		}
+
+
+
+		return subset;
+	}
+
+
+	public double getResponseTime(ArrayList<PriorityTask> interferenceSet){
+
+
+		double wi = getCompTime();
+
+		double wicopy;
+		do{
+			wicopy=wi;
+			BigDecimal interf = new BigDecimal(0);
+			for(int i=0; i<interferenceSet.size(); i++){
+
+				PriorityTask task = interferenceSet.get(i);
+				BigDecimal mult = new BigDecimal((int)Math.ceil((wicopy/task.getPeriod())));
+				interf = interf.add(mult.multiply(new BigDecimal(1000000000*(task.getCompTime()))));
+			}
+			wi = new BigDecimal(1000000000*getCompTime()).add(interf).doubleValue()/1000000000;
+
+		} while (wi!=wicopy&&wi<=getDeadline());
+
+		// Considering deadline = period, the code below is correct:
+		if (wi > this.getDeadline()) {
+//System.out.println("This task is not schedulable!");
+			return Double.MAX_VALUE;
+		}
+
+		return wi;
+
+
+
+
+	}
+
+
+
+	public boolean isSchedulable(ArrayList<PriorityTask> taskSet){
+		
+		return getResponseTime(getInterferenceSet(taskSet))<=getDeadline();
+		
+	}
+
+
+	public boolean isGroupSchedulable(ArrayList<PriorityTask> taskSet){
+		
+		boolean schedulable=true;
+
+		for(int m=0;m<group.size();m++){
+			double rt = getFromGroup(m).getResponseTime(getFromGroup(m).getInterferenceSet(taskSet));
+			if (rt > getFromGroup(m).getDeadline()) {schedulable=false;}
+		}
+
+		return schedulable && isSchedulable(taskSet);//group array does not include group head
+		
+	}
+
+
+	public double getUtilization(){
+		return getCompTime() / getPeriod();
+	}
+
+	public double getCost(){return getUtilization();}
+	
+
+
+	public boolean isActive(){
+
+		return isPeriodic();
+
+	}
+
+
+	public boolean isPeriodic(){
+
+		if(period>0) {return true;}
+		else {return false;}
+
+	}
+
+	public PriorityTask getFromGroup(int i){
+
+		return (PriorityTask) group.get(i);
+
+	}
+
+}

@@ -1,0 +1,193 @@
+package lsi.noc.kernel.priority;
+
+import java.awt.Dimension;
+import java.util.ArrayList;
+import java.util.Hashtable;
+
+import javax.swing.JFrame;
+
+import org.apache.commons.collections15.Transformer;
+
+import edu.uci.ics.jung.algorithms.layout.CircleLayout;
+import edu.uci.ics.jung.algorithms.layout.Layout;
+import edu.uci.ics.jung.graph.DirectedGraph;
+import edu.uci.ics.jung.graph.DirectedSparseGraph;
+import edu.uci.ics.jung.visualization.BasicVisualizationServer;
+
+public class PrecedenceBasedPriorityMinimizer extends PriorityMinimizer {
+
+
+
+
+
+	DirectedGraph<PriorityTrafficFlow, String> priorityPrecedenceGraph;
+	Hashtable<PriorityTrafficFlow,Integer> priorities;
+
+
+	public PrecedenceBasedPriorityMinimizer(ArrayList<PriorityTrafficFlow> f){
+
+		super(f);
+
+		createPriorityPrecedenceGraph();
+		minimizePriorities();
+		visualizePriorityPrecedenceGraph();
+		
+	}
+
+
+
+	public void createPriorityPrecedenceGraph(){
+
+		priorityPrecedenceGraph = new DirectedSparseGraph<PriorityTrafficFlow,String>();
+
+		for(int i=0;i<flows.size();i++){
+			priorityPrecedenceGraph.addVertex(flows.get(i));
+		}
+
+		for(int i=0;i<flows.size();i++){
+
+			PriorityTrafficFlow flowi = flows.get(i);
+			ArrayList<PriorityTrafficFlow> sd= flowi.getDirectInterferenceSet(flows);
+
+			//adds all directed edges to all traffics which should have higher priority than flowi
+			for(int j=0;j<sd.size();j++){
+				priorityPrecedenceGraph.addEdge(i+"-"+j, flowi,sd.get(j));
+			}
+		}
+	}
+
+
+	public void visualizePriorityPrecedenceGraph(){
+
+
+		// The Layout<V, E> is parameterized by the vertex and edge types
+		Layout<PriorityTrafficFlow, String> layout = new CircleLayout(priorityPrecedenceGraph);
+		layout.setSize(new Dimension(900,900)); // sets the initial size of the space
+		// The BasicVisualizationServer<V,E> is parameterized by the edge types
+		BasicVisualizationServer<PriorityTrafficFlow,String> vv =
+			new BasicVisualizationServer<PriorityTrafficFlow,String>(layout);
+		vv.setPreferredSize(new Dimension(950,950)); //Sets the viewing area size
+		
+		Transformer<PriorityTrafficFlow,String> labeler = new Transformer<PriorityTrafficFlow,String>() {
+			public String transform(PriorityTrafficFlow v){
+				return v.getSourceTask().getName()+"-"+v.getDestinationTask().getName()+": "+priorities.get(v).toString();
+//				return priorities.get(v).toString();
+			}
+			
+		};
+
+		vv.getRenderContext().setVertexLabelTransformer(labeler);	
+		
+		JFrame frame = new JFrame("Simple Graph View");
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.getContentPane().add(vv);
+		frame.pack();
+		frame.setVisible(true);
+
+
+	}
+
+
+
+	public void minimizePriorities(){
+
+		priorities = new Hashtable<PriorityTrafficFlow,Integer>();
+
+		for(int i=0;i<flows.size();i++){
+			priorities.put(flows.get(i),new Integer(-1));
+		}
+
+		boolean loop=true;
+
+		while(loop){
+
+			loop=false;
+			for(int i=0;i<flows.size();i++){
+
+				PriorityTrafficFlow f=flows.get(i);
+				if(priorities.get(f).intValue()==-1) {
+					loop=true;
+					applyTransitiveReduction(f);
+				}
+			}
+		}
+		
+		
+		
+	}
+
+
+
+	//emulates a transitive reduction of the subgraph that contains the given node,
+	//and then numbers each node with the number of hops
+	//it takes to reach the node without precedence relations
+
+	public void applyTransitiveReduction(PriorityTrafficFlow current){
+
+
+
+		PriorityTrafficFlow next=null;
+
+		// first, checks if the node has successor
+		int suc = priorityPrecedenceGraph.getSuccessorCount(current);	
+		//if it doesn't, assign highest priority 
+		//and recurses with one of its predecessors that hasn't been 
+		//assigned a priority, if there's any
+		if(suc==0){
+			priorities.put(current,new Integer(0));
+			Object[] preds = priorityPrecedenceGraph.getPredecessors(current).toArray();
+			for(int i=0;i<preds.length;i++){
+				int pr = priorities.get(preds[i]).intValue();
+				if(pr==-1){
+					next = (PriorityTrafficFlow)preds[i];
+				}
+			}
+		}
+
+
+		//if it has successors, check if all of them have priorities assigned to them 
+		else{
+
+
+			//if at least one hasn't, then recurse with that one
+			//if all have priorities, assign the lowest priority +1 to the current node, then recurse with a predecessor
+			Object[] sucs = priorityPrecedenceGraph.getSuccessors(current).toArray();
+			int low=-1;
+			boolean all = false;
+			for(int i=0;i<sucs.length;i++){
+				int pr = priorities.get(sucs[i]).intValue();
+				if(pr==-1){next = (PriorityTrafficFlow)sucs[i]; all=false; break;}
+				else{ 
+					all=true;
+					if(pr>=low){low=pr+1;}
+				}
+			}
+
+			if(all){
+				priorities.put(current,new Integer(low));
+				Object[] preds = priorityPrecedenceGraph.getPredecessors(current).toArray();
+				for(int i=0;i<preds.length;i++){
+					int pr = priorities.get(preds[i]).intValue();
+					if(pr==-1){
+						next = (PriorityTrafficFlow)preds[i];
+					}
+				}
+
+
+
+			}
+		}
+
+
+
+		//recursion call
+		if(next!=null) applyTransitiveReduction(next);
+
+
+
+
+
+	}
+
+
+}

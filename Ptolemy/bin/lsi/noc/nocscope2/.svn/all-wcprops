@@ -1,0 +1,149 @@
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/svn/NoC/!svn/ver/466/release2011/lsi/noc/nocscope2
+END
+PointToPointScope.java
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/NoC/!svn/ver/466/release2011/lsi/noc/nocscope2/PointToPointScope.java
+END
+NoCScopeActor.java
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/NoC/!svn/ver/466/release2011/lsi/noc/nocscope2/NoCScopeActor.java
+END
+BufferScope.java
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/NoC/!svn/ver/466/release2011/lsi/noc/nocscope2/BufferScope.java
+END
+UtilizationScope.java
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/NoC/!svn/ver/466/release2011/lsi/noc/nocscope2/UtilizationScope.java
+END
+UtilizationScopeTest.java
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/NoC/!svn/ver/466/release2011/lsi/noc/nocscope2/UtilizationScopeTest.java
+END
+NoCScope.java
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/NoC/!svn/ver/466/release2011/lsi/noc/nocscope2/NoCScope.java
+END
+PowerScopeActor.java
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/NoC/!svn/ver/466/release2011/lsi/noc/nocscope2/PowerScopeActor.java
+END
+InputSwitch.java
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/NoC/!svn/ver/466/release2011/lsi/noc/nocscope2/InputSwitch.java
+END
+OutputSwitch.java
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/NoC/!svn/ver/466/release2011/lsi/noc/nocscope2/OutputSwitch.java
+END
+InputScopeActor.java
+K 25
+svn:wc:ra_dav:version-url
+V 72
+/svn/NoC/!svn/ver/466/release2011/lsi/noc/nocscope2/InputScopeActor.java
+END
+EndToEndSwitch.java
+K 25
+svn:wc:ra_dav:version-url
+V 71
+/svn/NoC/!svn/ver/466/release2011/lsi/noc/nocscope2/EndToEndSwitch.java
+END
+OutputScopeActor.java
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/NoC/!svn/ver/466/release2011/lsi/noc/nocscope2/OutputScopeActor.java
+END
+HotSpotScopeActor.java
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/NoC/!svn/ver/466/release2011/lsi/noc/nocscope2/HotSpotScopeActor.java
+END
+EndToEndScopeActor.java
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/NoC/!svn/ver/466/release2011/lsi/noc/nocscope2/EndToEndScopeActor.java
+END
+PowerScope.java
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/NoC/!svn/ver/466/release2011/lsi/noc/nocscope2/PowerScope.java
+END
+PointToPointSwitch.java
+K 25
+svn:wc:ra_dav:version-url
+V 75
+/svn/NoC/!svn/ver/466/release2011/lsi/noc/nocscope2/PointToPointSwitch.java
+END
+InputScope.java
+K 25
+svn:wc:ra_dav:version-url
+V 67
+/svn/NoC/!svn/ver/466/release2011/lsi/noc/nocscope2/InputScope.java
+END
+PointToPointScopeActor.java
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/svn/NoC/!svn/ver/466/release2011/lsi/noc/nocscope2/PointToPointScopeActor.java
+END
+OutputScope.java
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/NoC/!svn/ver/466/release2011/lsi/noc/nocscope2/OutputScope.java
+END
+HotSpotScope.java
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/NoC/!svn/ver/466/release2011/lsi/noc/nocscope2/HotSpotScope.java
+END
+EndToEndScope.java
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/NoC/!svn/ver/466/release2011/lsi/noc/nocscope2/EndToEndScope.java
+END
+BufferSwitch.java
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/NoC/!svn/ver/466/release2011/lsi/noc/nocscope2/BufferSwitch.java
+END
+BufferScopeActor.java
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/NoC/!svn/ver/466/release2011/lsi/noc/nocscope2/BufferScopeActor.java
+END
+UtilizationSwitch.java
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/NoC/!svn/ver/466/release2011/lsi/noc/nocscope2/UtilizationSwitch.java
+END

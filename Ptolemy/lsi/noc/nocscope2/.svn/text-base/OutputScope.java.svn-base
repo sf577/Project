@@ -1,0 +1,63 @@
+//Copyright (c) 2007 Leandro Soares Indrusiak
+//All rights reserved.
+//Darmstadt, 14/06/2007.
+//Version 1.0
+
+//Copyright (c) 2008 Leandro Moller
+//All rights reserved.
+//Darmstadt, 29/10/2008.
+//Version 2.0
+
+package lsi.noc.nocscope2;
+
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Color;
+
+public class OutputScope extends NoCScope {
+
+	OutputSwitch[][] nodes;
+	int xdimension, ydimension;
+	
+	public OutputScope(int xdimension, int ydimension){
+        this.xdimension = xdimension;
+        this.ydimension = ydimension;
+		
+		nodes = new OutputSwitch[xdimension][ydimension];
+		
+		for(int i=0;i<xdimension;i++){
+			for(int j=0;j<ydimension;j++){
+				OutputSwitch cn = new OutputSwitch();
+				cn.setMaxColor(Color.red);
+				cn.setMinColor(Color.white);
+				cn.setNumberVisible(true);
+				nodes[i][j]=cn;
+			}
+		}
+	}
+	
+	public OutputSwitch getSwitch(int x, int y){
+        int i = x;
+        int j = (ydimension - 1) - y;
+        return nodes[i][j];
+	}
+	
+	
+	public void paint(Graphics graphics){
+		
+		Graphics2D g = (Graphics2D)graphics;
+		g.setColor(Color.lightGray);
+		g.fillRect(0,0,1000,1000);
+		
+		//go in x dimension
+		for(int i=0;i<nodes.length;i++){
+		    //go in y dimension
+			for(int j=0;j<nodes[i].length;j++){
+				g.translate(i*100,j*100);
+				nodes[i][j].paint(g);
+				g.translate(-i*100,-j*100);
+			}
+		}
+	}
+
+}

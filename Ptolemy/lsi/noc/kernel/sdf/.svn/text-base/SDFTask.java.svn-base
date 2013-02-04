@@ -1,0 +1,64 @@
+package lsi.noc.kernel.sdf;
+
+import lsi.noc.kernel.SimpleTask;
+
+public class SDFTask extends SimpleTask {
+
+	SDFCommunication[] inputs;
+	int[] consumptionRates;
+	SDFCommunication[] outputs;
+	int[] productionRates;
+	
+	public SDFTask(){
+		super();
+	}
+	
+	public void setChannels(SDFCommunication[] inputs, SDFCommunication[] outputs, int[] consumptionRates, int[] productionRates){
+		
+		this.inputs=inputs;
+		this.outputs=outputs;
+		this.consumptionRates = consumptionRates;
+		this.productionRates = productionRates;
+		
+	}
+	
+	
+	
+	// Fires this task, consuming tokens from input channels and producing tokens to output channels.
+	// Throws an exception and returns false if there are not enough tokens on a particular input.
+	
+	public boolean fire() throws Exception{
+		
+		boolean b = true;
+		for(int i=0;i<inputs.length;i++){
+			
+			b = b && inputs[i].readTokens(consumptionRates[i]);
+			if(!b){throw new Exception("Task "+this.getName()+" tried to read from an empty buffer.");}
+			
+		}
+		
+		for(int i=0;i<outputs.length;i++){
+			
+			outputs[i].writeTokens(productionRates[i]);
+			
+		}
+		
+		return b;
+		
+	}
+	
+	
+	// Fires this actor i successive times
+	
+	public boolean fire(int i) throws Exception{
+		boolean b = true;
+		for(int loop=0;loop<i;loop++){
+			
+			b = b && this.fire();
+			
+		}
+		
+		return b;
+	}
+	
+}

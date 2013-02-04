@@ -1,0 +1,11 @@
+package lsi.noc.kernel;
+
+public abstract class RoutingAlgorithm {
+
+	public abstract Route route(Linkable source, Linkable destination,
+			Interconnect i);
+
+	public abstract Link nextHop(Linkable current, Linkable destination,
+			Interconnect i);
+
+}

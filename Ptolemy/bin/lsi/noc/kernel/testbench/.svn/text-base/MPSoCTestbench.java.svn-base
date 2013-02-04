@@ -1,0 +1,1347 @@
+package lsi.noc.kernel.testbench;
+
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Point;
+import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.Random;
+import java.util.StringTokenizer;
+
+import javax.swing.JFrame;
+
+
+import lsi.noc.kernel.Link;
+import lsi.noc.kernel.Mesh2DNoC;
+import lsi.noc.kernel.Mesh2DNoCFactory;
+import lsi.noc.kernel.Mesh2DRouter;
+import lsi.noc.kernel.Mesh2DXYRouting;
+import lsi.noc.kernel.ProcessingCore;
+import lsi.noc.kernel.Route;
+import lsi.noc.kernel.visualisation.RouteViewer;
+import lsi.noc.kernel.priority.*;
+
+public class MPSoCTestbench extends Thread{
+
+	ArrayList<PriorityTask> tasks;
+	ArrayList<PriorityTrafficFlow> flows;
+	int x, y;
+	double trav, rout;
+
+	Mesh2DNoC network;
+	Mesh2DXYRouting routing;
+	RouteViewer panel;
+
+	double[][] rutilization; // utilization of each processor under random mapping
+	double[][] ffutilization; // utilization of each processor under first fit mapping
+	double[][] sffutilization; // utilization of each processor under first fit spiral mapping
+	double[][] offutilization; // utilization of each processor under optimized first fit mapping
+	double[][] soffutilization; // utilization of each processor under optimized first fit spiral mapping
+	double[][] nnutilization; // utilization of each processor under nearest neighbor mapping
+	double[][] onnutilization; // utilization of each processor under optimized nearest neighbor mapping
+	double[][] dutilization; // utilization of each processor under designer-defined mapping
+
+
+
+	public static void main(String[] args) {
+
+
+		MPSoCTestbench  tb = new MPSoCTestbench();
+		tb.start();
+
+	}
+
+	public void run(){
+
+		//NoC dimensions
+		x = 4;
+		y = 4;
+
+
+
+		flows = new ArrayList<PriorityTrafficFlow>();
+		tasks = new ArrayList<PriorityTask>();
+
+
+
+		Mesh2DNoCFactory factory = new Mesh2DNoCFactory();
+		network = (Mesh2DNoC)factory.createInterconnect(x,y);
+
+		routing = new Mesh2DXYRouting();
+
+		
+		createApplicationFlows();
+
+		//createRandomTasks(50);
+		//createRandomFlows(50);
+
+
+		// RANDOM
+
+	    
+		boolean rready = false;
+		
+		/*
+		int count = 0;
+		while(!rready){
+			System.out.println("not yet "+count);
+			count++;
+			rready = mapRandomOsmar();
+		}
+		*/
+		rready = mapRandom();
+		
+		
+		
+		if(rready){
+			System.out.println("Schedulable under Random!");
+			//adjustRoutes(1,5); // Hermes values
+
+			//greenpringle values
+			//time a flit takes to traverse a link: 10 nanoseconds = 1 cycle @ 100MHz
+			//time to route a header: 50 nanoseconds = 2 cycles @ 100MHz
+			adjustRoutes(0.00000001,0.00000002, "Random");
+
+			report();
+			reportUtilization(rutilization);
+			System.out.println(getMappingString());
+			//			PriorityMinimizer pm = new PrecedenceBasedPriorityMinimizer(flows);
+		}
+		else{System.out.println("Unschedulable under Random!");}
+
+
+		// FIRST FIT
+
+		boolean ffready = mapFirstFit();
+		if(ffready){
+			System.out.println("Schedulable under First Fit!");
+			//adjustRoutes(1,5); // Hermes values
+
+			//greenpringle values
+			//time a flit takes to traverse a link: 10 nanoseconds = 1 cycle @ 100MHz
+			//time to route a header: 50 nanoseconds = 2 cycles @ 100MHz
+			adjustRoutes(0.00000001,0.00000002,"First Fit");
+
+			report();
+			reportUtilization(ffutilization);
+			System.out.println(getMappingString());
+			//			PriorityMinimizer pm = new PrecedenceBasedPriorityMinimizer(flows);
+		}
+		else{System.out.println("Unschedulable under First Fit!");}
+
+
+		// FIRST FIT SPIRAL
+
+		boolean sffready = mapFirstFitSpiral();
+		if(sffready){
+			System.out.println("Schedulable under First Fit Spiral!");
+			//adjustRoutes(1,5); // Hermes values
+
+			//greenpringle values
+			//time a flit takes to traverse a link: 10 nanoseconds = 1 cycle @ 100MHz
+			//time to route a header: 50 nanoseconds = 2 cycles @ 100MHz
+			adjustRoutes(0.00000001,0.00000002,"First Fit Spiral");
+
+			report();
+			reportUtilization(sffutilization);
+			System.out.println(getMappingString());
+			//			PriorityMinimizer pm = new PrecedenceBasedPriorityMinimizer(flows);
+		}
+		else{System.out.println("Unschedulable under First Fit Spiral!");}
+
+
+		// OPTIMIZED FIRST FIT 
+
+		boolean offready = mapOptimizedFirstFit();
+		if(offready){
+			System.out.println("Schedulable under Optimized First Fit!");
+			//adjustRoutes(1,5); // Hermes values
+
+			//greenpringle values
+			//time a flit takes to traverse a link: 10 nanoseconds = 1 cycle @ 100MHz
+			//time to route a header: 50 nanoseconds = 2 cycles @ 100MHz
+			adjustRoutes(0.00000001,0.00000002,"Optimized First Fit");
+
+			report();
+			reportUtilization(offutilization);
+			System.out.println(getMappingString());
+		}
+		else{System.out.println("Unschedulable under Optimized First Fit!");}
+
+
+		// OPTIMIZED FIRST FIT SPIRAL		
+
+		boolean soffready = mapOptimizedFirstFitSpiral();
+		if(soffready){
+			System.out.println("Schedulable under Optimized First Fit Spiral!");
+			//adjustRoutes(1,5); // Hermes values
+
+			//greenpringle values
+			//time a flit takes to traverse a link: 10 nanoseconds = 1 cycle @ 100MHz
+			//time to route a header: 50 nanoseconds = 2 cycles @ 100MHz
+			adjustRoutes(0.00000001,0.00000002,"Optimized First Fit Spiral");
+
+			report();
+			reportUtilization(soffutilization);
+			System.out.println(getMappingString());
+		}
+		else{System.out.println("Unschedulable under Optimized First Fit Spiral!");}
+
+
+		// NEAREST NEIGHBOR
+
+		boolean nnready = mapNearestNeighbor();
+		if(nnready){
+			System.out.println("Schedulable under Nearest Neighbor!");
+			//adjustRoutes(1,5); // Hermes values
+
+			//greenpringle values
+			//time a flit takes to traverse a link: 10 nanoseconds = 1 cycle @ 100MHz
+			//time to route a header: 50 nanoseconds = 2 cycles @ 100MHz
+			adjustRoutes(0.00000001,0.00000002,"Nearest Neighbor");
+
+			report();			
+			reportUtilization(nnutilization);
+			System.out.println(getMappingString());
+		}
+		else{System.out.println("Unschedulable under Nearest Neighbor!");}
+
+		// OPTIMIZED NEAREST NEIGHBOR
+
+		boolean onnready = mapOptimizedNearestNeighbor();
+		if(onnready){
+			System.out.println("Schedulable under Optimized Nearest Neighbor!");
+			//adjustRoutes(1,5); // Hermes values
+
+			//greenpringle values
+			//time a flit takes to traverse a link: 10 nanoseconds = 1 cycle @ 100MHz
+			//time to route a header: 50 nanoseconds = 2 cycles @ 100MHz
+			adjustRoutes(0.00000001,0.00000002,"Optimized Nearest Neighbor");
+
+			report();
+			reportUtilization(onnutilization);
+			System.out.println(getMappingString());
+		}
+		else{System.out.println("Unschedulable under Optimized Nearest Neighbor!");}
+
+		
+		// DESIGNER DEFINED
+
+		boolean dready = mapDesignerDefined();
+		if(dready){
+			System.out.println("Schedulable under Designer Defined!");
+			//adjustRoutes(1,5); // Hermes values
+
+			//greenpringle values
+			//time a flit takes to traverse a link: 10 nanoseconds = 1 cycle @ 100MHz
+			//time to route a header: 50 nanoseconds = 2 cycles @ 100MHz
+			adjustRoutes(0.00000001,0.00000002,"Designer Defined");
+
+			report();
+			reportUtilization(dutilization);
+			System.out.println(getMappingString());
+		}
+		else{System.out.println("Unschedulable under Designer Defined!");}
+		
+
+
+	}
+
+
+
+	public void report(){
+
+		System.out.println("----- Tasks ------");
+		for(int i=0;i<tasks.size();i++){
+			String name = tasks.get(i).getName();
+			double wcet = tasks.get(i).getResponseTime(tasks.get(i).getInterferenceSet(tasks));
+			System.out.println(i+","+name+","+wcet+" "+tasks.get(i).getCompTime());
+
+		}
+		System.out.println("----- Flows ------");
+		
+		for(int i=0;i<flows.size();i++){
+
+			int dir=(flows.get(i).getDirectInterferenceSet(flows)).size();
+			int indir=(flows.get(i).getIndirectInterferenceSet(flows)).size();
+			double latency = flows.get(i).getBasicLatency(trav,rout);
+			double wclatency = flows.get(i).getDirectInterferenceWorstCaseLatency(trav,rout,flows);
+			double iwclatency = flows.get(i).getWorstCaseLatency(trav,rout,flows);
+
+			
+			String source = flows.get(i).getSourceTask().getName();
+			String dest = flows.get(i).getDestinationTask().getName();
+			
+			
+			//System.out.println("Flow: "+i+" .... Direct Interference: "+dir+" .... Indirect Interference: "+indir+" .... Basic Latency: "+latency+" .... WC Latency: "+wclatency+" .... Indirect WC Latency: "+iwclatency);
+			System.out.println(i+","+source+","+dest+","+dir+","+indir+","+latency+","+wclatency+","+iwclatency);
+
+//			System.out.println("wcet "+ flows.get(i).getSourceTask().getWorstCaseExecutionTime(flows.get(i).getSourceTask().getInterferenceSet(tasks)));			
+//			System.out.println("jitter "+ flows.get(i).getReleaseJitter());			
+			
+			if(iwclatency>flows.get(i).getPeriod()){
+				System.out.println("DEADLINE MISSED!");
+			}
+			//System.out.println(latency+","+iwclatency);
+
+		}
+		System.out.println("-----------");
+
+
+	}
+
+
+	public void reportUtilization(double[][] util){
+		
+		System.out.println("----- Cores ------");
+		for(int i=0;i<x;i++){
+			for(int j=0;j<y;j++){
+			
+			System.out.println(i+","+j+","+util[i][j]);
+			}
+		}
+		
+		
+	}
+	
+	public void createRandomTasks(int n){
+
+		Random rnd = new Random();
+
+
+
+		// creates n tasks 
+
+		for (int i=0;i<n;i++){
+
+
+			// comptime between 0.0001-0.2 seconds
+			PriorityTask task = new PriorityTask(i,0.0001+rnd.nextDouble()*2);
+
+			// period between 0.0001-0.2 seconds, more or equal than comptime 
+			do{
+				task.setPeriod(0.001+rnd.nextDouble()*2);}
+			while(task.getCompTime()>task.getPeriod());
+
+			task.setReleaseJitter(0);
+
+			tasks.add(task);
+
+		}
+
+	}
+
+	public void createRandomFlows(int n){
+
+
+		//time a flit takes to traverse a link
+		//trav=1;
+		//time to route a header
+		//rout=3;  
+
+		Random rnd = new Random();
+
+
+
+		// creates n traffic flows with randomly generated sources and destinations
+
+		for (int i=0;i<n&&i<tasks.size();i++){
+
+			int d;
+			do{
+				d = rnd.nextInt(tasks.size());
+			}
+			while(i==d);
+
+			PriorityTask st = tasks.get(i);
+			PriorityTask dt = tasks.get(d);
+
+			PriorityTrafficFlow flow = new PriorityTrafficFlow(st,dt);
+
+			flow.setPeriod(st.getPeriod());
+			flow.setPriority(st.getPriority());
+			//packets of size 3-28800
+			flow.setPayload(rnd.nextInt(3+168797));
+
+
+			flows.add(flow);
+
+		}
+
+
+	}
+
+
+	public boolean mapRandom(){
+
+		//initialize all processor utilization as 0
+		rutilization = new double[x][y];
+		for(int i=0;i<x;i++){
+			for(int j=0;j<y;j++){rutilization[i][j]=0;}
+		}
+
+		Random rnd = new Random();
+
+		for(int k=0;k<tasks.size();k++){
+			PriorityTask t = tasks.get(k);
+
+			for(int tr=0;tr<5;tr++){
+
+				if (t.getGroupStatus()==2){break;}
+
+				int px= rnd.nextInt(x);
+				int py= rnd.nextInt(y);
+
+				ProcessingCore pc = network.getCore(px,py);
+				if(t.getGroupStatus()==0 && rutilization[px][py]+t.getUtilization()<=1){
+					rutilization[px][py]+=t.getUtilization();
+					t.setCore(pc);
+					break;} 
+				else if (t.getGroupStatus()==1 && rutilization[px][py]+t.getGroupUtilization()<=1){
+					t.setCore(pc);
+					rutilization[px][py]+=t.getUtilization();
+					for(int m=0;m<t.group.size();m++){
+						t.group.get(m).setCore(pc);
+						rutilization[px][py]+=t.group.get(m).getUtilization();
+					}
+				}
+				else if(tr==4){return false;}
+			}
+		}
+
+		return true;
+	}
+
+
+	public boolean mapRandomOsmar(){
+
+		//initialize all processor utilization as 0
+		rutilization = new double[x][y];
+		for(int i=0;i<x;i++){
+			for(int j=0;j<y;j++){rutilization[i][j]=0;}
+		}
+
+		Random rnd = new Random();
+
+		boolean selectedTasks[] = new boolean[tasks.size()];
+		for (int i = 0; i < tasks.size(); i++) {
+			selectedTasks[i] = false;
+		}
+		int allSelectedTasks = 0;
+		
+		while (allSelectedTasks < tasks.size()) {
+			for (int px = 0; px < x; px++) {
+				for (int py = 0; py < y; py++) {
+					int nextTask = rnd.nextInt(tasks.size());
+					if (selectedTasks[nextTask]) {
+						while (selectedTasks[nextTask]) {
+							nextTask = rnd.nextInt(tasks.size());
+						}
+					} 
+					selectedTasks[nextTask] = true;
+					PriorityTask t = tasks.get(nextTask);
+					allSelectedTasks++;
+
+					for(int tr=0;tr<5;tr++){
+
+						if (t.getGroupStatus()==2){break;}
+
+//						int px= rnd.nextInt(x);
+//						int py= rnd.nextInt(y);
+
+						ProcessingCore pc = network.getCore(px,py);
+						
+						// NOTE: The utilization below 100% is used to see if the thread is schedulable.
+						// This is not correct, so later we do the Response-time analysis to check if the scenario
+						// is indeed schedulable.
+						if(t.getGroupStatus()==0 && rutilization[px][py]+t.getUtilization()<=1){
+							rutilization[px][py]+=t.getUtilization();
+							t.setCore(pc);
+							break;} 
+						else if (t.getGroupStatus()==1 && rutilization[px][py]+t.getGroupUtilization()<=1){
+							t.setCore(pc);
+							rutilization[px][py]+=t.getUtilization();
+							for(int m=0;m<t.group.size();m++){
+								t.group.get(m).setCore(pc);
+								rutilization[px][py]+=t.group.get(m).getUtilization();
+							}
+						}
+						else if(tr==4){return false;}
+					}
+
+					if (allSelectedTasks >= tasks.size()) {
+						break;
+					}
+				}
+				if (allSelectedTasks >= tasks.size()) {
+					break;
+				}
+			}
+		}
+		
+		// NOTE: Does the response-time analysis over the threads in each core 
+		for (int i = 0; i < tasks.size(); i++) {
+			PriorityTask t = tasks.get(i);
+			double rt = t.getResponseTime(t.getInterferenceSet(tasks));
+			if (rt > t.getPeriod()) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	
+	
+	
+	
+	
+	public boolean mapFirstFit(){
+
+		//initialize all processor utilization as 0
+		ffutilization = new double[x][y];
+		for(int i=0;i<x;i++){
+			for(int j=0;j<y;j++){ffutilization[i][j]=0;}
+		}
+		
+		ArrayList<PriorityTask> otasks = this.sortTasksbyPriority(tasks);
+		
+		for(int k=0;k<otasks.size();k++){
+			PriorityTask t = otasks.get(k);
+
+			//System.out.println("Trying to map task "+ t.getName()+" "+t);
+			//System.out.println("Period "+ t.getPeriod());
+			//System.out.println("Comp time "+ t.getCompTime());
+			//System.out.println("Utilization "+ t.getUtilization());
+
+
+			if(!doFirstFit(t, ffutilization)){return false;}
+
+		}
+
+		return true;
+	}
+
+
+	public boolean mapFirstFitSpiral(){
+
+		//initialize all processor utilization as 0
+		sffutilization = new double[x][y];
+		for(int i=0;i<x;i++){
+			for(int j=0;j<y;j++){sffutilization[i][j]=0;}
+		}
+
+
+		for(int k=0;k<tasks.size();k++){
+
+			PriorityTask t = tasks.get(k);
+
+			if(!doFirstFitSpiral(t, sffutilization)){return false;}
+
+		}
+
+		return true;
+	}	
+
+
+
+	private boolean doFirstFit(PriorityTask p, double[][] utilization){
+
+		if (p.getGroupStatus()==2){return true;}
+		
+		for(int i=0;i<x;i++){
+			for(int j=0;j<y;j++){
+				if(p.getGroupStatus()==0 && utilization[i][j]+p.getUtilization()<=1){
+					//assign task to the first processor that can accept it
+					p.setCore(network.getCore(i,j));
+						if (p.isSchedulable(tasks)) {
+System.out.println("Mapped task "+p.getName()+" to core "+i+","+j+" with util "+ utilization[i][j]);
+System.out.println("Period "+p.getPeriod()+" resp time "+p.getResponseTime(p.getInterferenceSet(tasks)));
+
+							utilization[i][j]+=p.getUtilization();
+							return true;
+						}
+						else{p.setCore(null);}
+				} 
+				else if (p.getGroupStatus()==1 && utilization[i][j]+p.getGroupUtilization()<=1){
+					ProcessingCore pc = network.getCore(i,j);	
+					p.setCore(pc);
+					for(int m=0;m<p.group.size();m++){
+						p.group.get(m).setCore(pc);
+					}
+					if(p.isGroupSchedulable(tasks)) 
+						{
+						utilization[i][j]+=p.getGroupUtilization();
+System.out.println("Mapped group head "+p.getName()+" to core "+i+","+j+" with util "+ utilization[i][j]);
+System.out.println("Period "+p.getPeriod()+" resp time "+p.getResponseTime(p.getInterferenceSet(tasks)));
+
+						return true;
+						}
+					else{
+						p.setCore(null);
+						for(int m=0;m<p.group.size();m++){
+							p.group.get(m).setCore(null);
+						}	
+					}
+				}
+			}
+		}
+System.out.println("Failed to map task "+p.getName());
+
+		return false;
+
+	}
+
+
+	private boolean doFirstFitSpiral(PriorityTask p, double[][] utilization){
+
+		if(p.getGroupStatus()==2) return true;
+
+		ArrayList<ProcessingCore> cores = getNeighbors(new Point(Math.abs(x/2),Math.abs(y/2)));
+		cores.add(0,network.getCore(Math.abs(x/2),Math.abs(y/2)));
+
+		for(int i=0;i<cores.size();i++){
+
+			Point pos = network.getMeshLocation(cores.get(i));
+			double procutil = utilization[pos.x][pos.y];
+
+			if(p.getGroupStatus()==0 && procutil+p.getUtilization()<=1){
+				//assign task to the first processor that can accept it
+				utilization[pos.x][pos.y]+=p.getUtilization();
+				p.setCore(cores.get(i));
+				return true;
+			} 
+			else if (p.getGroupStatus()==1 && procutil+p.getGroupUtilization()<=1){
+				ProcessingCore pc = cores.get(i);	
+				p.setCore(pc);
+				utilization[pos.x][pos.y]+=p.getUtilization();
+				for(int m=0;m<p.group.size();m++){
+					p.group.get(m).setCore(pc);
+					utilization[pos.x][pos.y]+=p.group.get(m).getUtilization();
+				}
+				return true;
+			}
+		}
+
+		return false;
+
+	}	
+
+
+	public boolean mapOptimizedFirstFit(){
+		//initialize all processor utilization as 0
+		offutilization = new double[x][y];
+		for(int i=0;i<x;i++){
+			for(int j=0;j<y;j++){offutilization[i][j]=0;}
+		}
+
+		//get a reordered task list so that high utilization ones are mapped first
+		ArrayList<PriorityTask> orderedTasks = sortTasksbyUtilization(tasks);
+
+		for(int k=0;k<orderedTasks.size();k++){
+
+			PriorityTask t = orderedTasks.get(k);
+			if(!doFirstFit(t, offutilization)){return false;}
+
+		}
+
+        // NOTE: Does the response-time analysis over the threads in each core
+        for (int i = 0; i < tasks.size(); i++) {
+            PriorityTask t = tasks.get(i);
+            double rt = t.getResponseTime(t.getInterferenceSet(tasks));
+            if (rt > t.getPeriod()) {
+                return false;
+            }
+        }
+
+		
+		return true;
+
+	}
+
+	public boolean mapOptimizedFirstFitSpiral(){
+		//initialize all processor utilization as 0
+		soffutilization = new double[x][y];
+		for(int i=0;i<x;i++){
+			for(int j=0;j<y;j++){soffutilization[i][j]=0;}
+		}
+
+		//get a reordered task list so that high utilization ones are mapped first
+		ArrayList<PriorityTask> orderedTasks = sortTasksbyUtilization(tasks);
+
+		for(int k=0;k<orderedTasks.size();k++){
+
+			PriorityTask t = orderedTasks.get(k);
+			if(!doFirstFitSpiral(t, soffutilization)){return false;}
+
+		}
+
+		
+        // NOTE: Does the response-time analysis over the threads in each core
+        for (int i = 0; i < tasks.size(); i++) {
+            PriorityTask t = tasks.get(i);
+            double rt = t.getResponseTime(t.getInterferenceSet(tasks));
+            if (rt > t.getPeriod()) {
+                return false;
+            }
+        }
+
+		
+		
+		return true;
+
+	}
+	public boolean mapNearestNeighbor(){
+
+		//initialize all processor utilization as 0
+		nnutilization = new double[x][y];
+		for(int i=0;i<x;i++){
+			for(int j=0;j<y;j++){nnutilization[i][j]=0;}
+		}
+
+
+		ArrayList<PriorityTask> toMap =  this.sortTasksbyPriority(tasks);
+
+		while(toMap.iterator().hasNext()){
+
+			PriorityTask p = toMap.iterator().next();
+			//System.out.println("Task "+p.getName());
+			//System.out.println("status "+p.groupstatus);
+
+			if(p.getGroupStatus()==2){toMap.remove(p);}
+			else{
+				boolean done = doFirstFit(p,nnutilization);
+				if(!done) return false;
+				if(p.getGroupStatus()==0){toMap.remove(p);}
+				else if(p.getGroupStatus()==1){
+					toMap.remove(p);
+					for(int m=0;m<p.group.size();m++){
+						toMap.remove(p.group.get(m));
+						//System.out.println("remove member "+p.group.get(m).getName());
+					}
+
+				}
+
+				ArrayList<PriorityTask> comms = this.sortTasksbyPriority(communicatingTasks(p));
+
+				ArrayList<ProcessingCore> neighbors;
+				if(comms.size()>0){
+					neighbors = getNeighbors(network.getMeshLocation(p.getCore()));
+
+					for(int i=0;i<comms.size();i++){
+						PriorityTask pt = comms.get(i);
+						//System.out.println("neighbor "+pt.getName());
+						//System.out.println("status "+pt.groupstatus);
+
+						boolean mapped = false;
+
+						if(pt.getGroupStatus()==2){toMap.remove(pt); mapped=true;}
+
+						//map neighboring tasks to neighbors with lower hop counts first
+						for(int j=0;j<neighbors.size();j++){
+
+							Point pos = network.getMeshLocation(neighbors.get(j));
+							double procutil = nnutilization[pos.x][pos.y];
+
+							if(pt.getGroupStatus()==0 && procutil+pt.getUtilization()<=1){
+								//assign task to the first processor that can accept it
+								pt.setCore(neighbors.get(j));
+								if (pt.isSchedulable(tasks)) {
+System.out.println("Mapped task "+pt.getName()+" to core "+i+","+j+" with util "+ nnutilization[pos.x][pos.y]);
+System.out.println("Period "+pt.getPeriod()+" resp time "+pt.getResponseTime(pt.getInterferenceSet(tasks)));
+								nnutilization[pos.x][pos.y]+=pt.getUtilization();
+								toMap.remove(pt);
+								mapped=true;
+								break;
+								}
+								else{
+									pt.setCore(null);
+								}
+							}
+							else if(pt.getGroupStatus()==1 && procutil+pt.getGroupUtilization()<=1){
+								//assign task to the first processor that can accept it
+								pt.setCore(neighbors.get(j));
+								for(int m=0;m<pt.group.size();m++){
+									pt.group.get(m).setCore(neighbors.get(j));
+								}
+								if(pt.isGroupSchedulable(tasks)){
+System.out.println("Mapped task "+pt.getName()+" to core "+i+","+j+" with util "+ nnutilization[pos.x][pos.y]);
+System.out.println("Period "+pt.getPeriod()+" resp time "+pt.getResponseTime(pt.getInterferenceSet(tasks)));
+
+								nnutilization[pos.x][pos.y]+=pt.getGroupUtilization();
+								toMap.remove(pt);
+								mapped=true;
+								for(int m=0;m<pt.group.size();m++){
+									toMap.remove(pt.group.get(m));
+								}
+								break;
+								}
+								else{
+									pt.setCore(null);
+									for(int m=0;m<pt.group.size();m++){
+										pt.group.get(m).setCore(null);
+									}	
+								}
+							}
+						}
+
+						if(!mapped){return false;}
+					}
+				}
+			}
+		}
+		
+		
+		
+        // NOTE: Does the response-time analysis over the threads in each core
+        for (int i = 0; i < tasks.size(); i++) {
+            PriorityTask t = tasks.get(i);
+            double rt = t.getResponseTime(t.getInterferenceSet(tasks));
+            if (rt > t.getPeriod()) {
+                return false;
+            }
+        }
+
+		
+		
+		return true;
+
+	}
+
+
+	public boolean mapOptimizedNearestNeighbor(){
+
+		//initialize all processor utilization as 0
+		onnutilization = new double[x][y];
+		for(int i=0;i<x;i++){
+			for(int j=0;j<y;j++){onnutilization[i][j]=0;}
+		}
+
+
+		ArrayList<PriorityTask> toMap = new ArrayList<PriorityTask>(tasks);
+
+		while(toMap.iterator().hasNext()){
+
+			PriorityTask p = toMap.iterator().next();
+			if(p.getGroupStatus()==2){toMap.remove(p);}
+			else{
+				boolean done = doFirstFitSpiral(p,onnutilization);
+				if(!done) return false;
+				if(p.getGroupStatus()==0){toMap.remove(p);}
+				else if(p.getGroupStatus()==1){
+					toMap.remove(p);
+					for(int m=0;m<p.group.size();m++){
+						toMap.remove(p.group.get(m));
+					}
+
+				}
+
+				ArrayList<PriorityTask> comms = communicatingTasks(p);
+
+				ArrayList<ProcessingCore> neighbors;
+				if(comms.size()>0){
+					neighbors = getNeighbors(network.getMeshLocation(p.getCore()));
+
+					for(int i=0;i<comms.size();i++){
+						PriorityTask pt = comms.get(i);
+						boolean mapped = false;
+
+						if(pt.getGroupStatus()==2){toMap.remove(pt); mapped=true;}
+
+						//map neighboring tasks to neighbors with lower hop counts first
+						for(int j=0;j<neighbors.size();j++){
+
+							Point pos = network.getMeshLocation(neighbors.get(j));
+							double procutil = onnutilization[pos.x][pos.y];
+
+							if(pt.getGroupStatus()==0 && procutil+pt.getUtilization()<=1){
+								//assign task to the first processor that can accept it
+								onnutilization[pos.x][pos.y]+=pt.getUtilization();
+								pt.setCore(neighbors.get(j));
+								toMap.remove(pt);
+								mapped=true;
+								break;
+							}
+							else if(pt.getGroupStatus()==1 && procutil+pt.getGroupUtilization()<=1){
+								//assign task group to the first processor that can accept it
+								onnutilization[pos.x][pos.y]+=pt.getUtilization();
+								pt.setCore(neighbors.get(j));
+								toMap.remove(pt);
+								mapped=true;
+								for(int m=0;m<pt.group.size();m++){
+									pt.group.get(m).setCore(neighbors.get(j));
+									onnutilization[pos.x][pos.y]+=pt.group.get(m).getUtilization();
+									toMap.remove(pt.group.get(m));
+								}
+								break;
+							}
+						}
+
+						if(!mapped){return false;}
+
+
+					}
+				}
+			}
+		}
+
+		
+        // NOTE: Does the response-time analysis over the threads in each core
+        for (int i = 0; i < tasks.size(); i++) {
+            PriorityTask t = tasks.get(i);
+            double rt = t.getResponseTime(t.getInterferenceSet(tasks));
+            if (rt > t.getPeriod()) {
+                return false;
+            }
+        }
+
+		
+		
+		return true;
+
+	}
+
+
+
+
+	//return all cores of the network ordered by hop distance
+	public ArrayList<ProcessingCore> getNeighbors(Point p){
+
+		ArrayList<ProcessingCore> neighbors = new ArrayList<ProcessingCore>();
+		boolean proceed=true;
+		for(int dist=1;proceed;dist++){
+			proceed = false;
+			for(int i=0;i<x;i++){
+				for(int j=0;j<y;j++){
+
+					if(getHopCount(p, new Point(i,j))==dist){
+						neighbors.add(network.getCore(i, j));
+						proceed=true;
+					}
+				}	
+			}
+		}
+		return neighbors;
+	}
+
+	//returns the XY hop distance between two points
+	public int getHopCount(Point source, Point dest){
+
+		return Math.abs(source.x-dest.x) + Math.abs(source.y-dest.y);
+
+	}
+
+	//returns the tasks with whom the task t communicates with
+	//in decreasing order of communication volume
+
+	public ArrayList<PriorityTask> communicatingTasks(PriorityTask t){
+
+		ArrayList<PriorityTask> comm = new ArrayList<PriorityTask>();
+		ArrayList<PriorityTrafficFlow> fl = sortFlowsbyVolume(flows);
+
+
+		for(int i=0;i<fl.size();i++){
+			if(fl.get(i).getSourceTask()==t){
+				comm.add(fl.get(i).getDestinationTask());
+
+			}
+		}
+		return comm;
+
+	}
+
+	
+	// returns a new list of tasks sorted by priority (highest first)
+	protected ArrayList<PriorityTask> sortTasksbyPriority(ArrayList<PriorityTask> ta){
+
+		//reorder tasks so that high priority ones are stored first
+		ArrayList<PriorityTask> orderedTasks = new ArrayList<PriorityTask>();
+		for(int k=0;k<ta.size();k++){
+
+
+			PriorityTask tasktoinsert = ta.get(k);
+			if(orderedTasks.size()==0){orderedTasks.add(tasktoinsert);}
+			else{
+				boolean added = false;
+				for(int i=0;i<orderedTasks.size();i++){
+					if(orderedTasks.get(i).getPriority()>tasktoinsert.getPriority()){
+
+						orderedTasks.add(i, tasktoinsert); //add right before the 1st task with lower priority
+						added=true;
+						break;
+					}
+				}
+				if(!added){orderedTasks.add(tasktoinsert);} //add to the last position
+
+			}
+		}
+
+		return orderedTasks;
+
+
+	}
+
+	
+	// returns a new list of tasks sorted by utilization (highest first)
+	protected ArrayList<PriorityTask> sortTasksbyUtilization(ArrayList<PriorityTask> ta){
+
+		//reorder tasks so that high utilization ones are stored first
+		ArrayList<PriorityTask> orderedTasks = new ArrayList<PriorityTask>();
+		for(int k=0;k<ta.size();k++){
+
+
+			PriorityTask tasktoinsert = ta.get(k);
+			if(orderedTasks.size()==0){orderedTasks.add(tasktoinsert);}
+			else{
+				boolean added = false;
+				for(int i=0;i<orderedTasks.size();i++){
+					if(orderedTasks.get(i).getUtilization()<tasktoinsert.getUtilization()){
+
+						orderedTasks.add(i, tasktoinsert); //add right before the 1st task with lower utilization
+						added=true;
+						break;
+					}
+				}
+				if(!added){orderedTasks.add(tasktoinsert);} //add to the last position
+
+			}
+		}
+
+		return orderedTasks;
+
+
+	}
+
+	// returns a new list of flows sorted by communication volume (highest first)
+	protected ArrayList<PriorityTrafficFlow> sortFlowsbyVolume(ArrayList<PriorityTrafficFlow> ta){
+
+		//reorder flows so that higher ratio of data over period are stored first
+		ArrayList<PriorityTrafficFlow> orderedFlows = new ArrayList<PriorityTrafficFlow>();
+		for(int k=0;k<ta.size();k++){
+
+
+			PriorityTrafficFlow flowtoinsert = ta.get(k);
+			double flowtoinsertratio = flowtoinsert.getPayload() / flowtoinsert.getPeriod();
+			if(orderedFlows.size()==0){orderedFlows.add(flowtoinsert);}
+			else{
+				boolean added = false;
+				for(int i=0;i<orderedFlows.size();i++){
+					double ratio = 	orderedFlows.get(i).getPayload() / orderedFlows.get(i).getPeriod();	
+
+					if(ratio < flowtoinsertratio){
+
+						orderedFlows.add(i, flowtoinsert); //add right before the 1st flow with lower ratio
+						added=true;
+						break;
+					}
+				}
+				if(!added){orderedFlows.add(flowtoinsert);} //add to the last position
+
+			}
+		}
+
+		return orderedFlows;
+
+
+	}	
+
+
+
+
+	public void adjustRoutes(double t, double r, String st){
+
+		JFrame frame = new JFrame(st);
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+		panel = new RouteViewer();
+		frame.getContentPane().add(panel, BorderLayout.CENTER);
+		frame.setMinimumSize(new Dimension(1200, 800));
+		panel.setLabels(true);
+		panel.setHopdistance(50);
+		panel.setOrigin(new Point(40,40));
+
+		frame.pack();
+		frame.setVisible(true);
+
+
+		//time a flit takes to traverse a link
+		trav=t;
+		//time to route a header
+		rout=r;  
+
+		for (int i=0;i<flows.size();i++){
+
+			PriorityTrafficFlow flow = flows.get(i);
+
+			PriorityTask sourcetask = flow.getSourceTask();
+
+			Point s = network.getMeshLocation(sourcetask.getCore());
+			Point d = network.getMeshLocation(flow.getDestinationTask().getCore());
+
+			ProcessingCore source = network.getCore(s.x, s.y);
+			ProcessingCore dest = network.getCore(d.x, d.y);
+
+			Route route = routing.route(source, dest, network);
+			flow.setRoute(route);
+			flow.setReleaseJitter(sourcetask.getResponseTime(sourcetask.getInterferenceSet(tasks)));
+
+
+			panel.addRoute(route);
+			panel.repaint();			
+
+		}
+
+	}
+
+
+
+
+
+	public boolean mapDesignerDefined(){
+
+		//initialize all processor utilization as 0
+		dutilization = new double[x][y];
+		for(int i=0;i<x;i++){
+			for(int j=0;j<y;j++){dutilization[i][j]=0;}
+		}
+
+		for(int k=0;k<tasks.size();k++){
+			PriorityTask t = tasks.get(k);
+
+			Point p = mapping(t.getName());
+			ProcessingCore pc = network.getCore(p.x,p.y);
+			if(dutilization[p.x][p.y]+t.getUtilization()<=1){
+				dutilization[p.x][p.y]+=t.getUtilization();
+				t.setCore(pc);
+			} 
+			else {return false;}
+		}
+		
+		
+        // NOTE: Does the response-time analysis over the threads in each core
+        for (int i = 0; i < tasks.size(); i++) {
+            PriorityTask t = tasks.get(i);
+            double rt = t.getResponseTime(t.getInterferenceSet(tasks));
+            if (rt > t.getPeriod()) {
+                return false;
+            }
+        }
+
+		
+		return true;
+	}
+
+
+	public void createApplicationFlows(){
+
+		// creates traffic flows according to the strings below
+		// models BasicVehicleApplication v0.6 with 320/240 resolution, 8 bit color and 128 bit flits 
+
+
+		String[] flowdesc = new String[39];
+
+
+		flowdesc[1]="BFE1 FDF1 0.02 7680 60 62 0.04 13";
+		flowdesc[2]="BFE2 FDF1 0.02 7680 60 62 0.04 14";
+		flowdesc[3]="BFE3 FDF1 0.02 7680 60 62 0.04 15";
+		flowdesc[4]="BFE4 FDF1 0.02 7680 60 62 0.04 16";
+		flowdesc[5]="BFE5 FDF2 0.02 7680 60 62 0.04 17";
+		flowdesc[6]="BFE6 FDF2 0.02 7680 60 62 0.04 18";
+		flowdesc[7]="BFE7 FDF2 0.02 7680 60 62 0.04 19";
+		flowdesc[8]="BFE8 FDF2 0.02 7680 60 62 0.04 20";
+		flowdesc[9]="FBU1 BFE1 0.01 153600 1200 1202 0.04 5";
+		flowdesc[10]="FBU2 BFE2 0.01 153600 1200 1202 0.04 6";
+		flowdesc[11]="FBU3 BFE3 0.01 153600 1200 1202 0.04 1";
+		flowdesc[12]="FBU3 VOD1 0.01 153600 1200 1202 0.04 7";
+		flowdesc[13]="FBU4 BFE4 0.01 153600 1200 1202 0.04 8";
+		flowdesc[14]="FBU5 BFE5 0.01 153600 1200 1202 0.04 9";
+		flowdesc[15]="FBU6 BFE6 0.01 153600 1200 1202 0.04 10";
+		flowdesc[16]="FBU7 BFE7 0.01 153600 1200 1202 0.04 11";
+		flowdesc[17]="FBU8 BFE8 0.01 153600 1200 1202 0.04 2";
+		flowdesc[18]="FBU8 VOD2 0.01 153600 1200 1202 0.04 12";
+		flowdesc[19]="FDF1 STPH 0.01 30720 240 242 0.04 21";
+		flowdesc[20]="FDF2 STPH 0.01 30720 240 242 0.04 22";
+		flowdesc[21]="NAVC DIRC 0.02 16384 128 130 0.1 24";
+		flowdesc[22]="NAVC OBDB 0.01 32768 256 258 2.0 37";
+		flowdesc[23]="NAVC THRC 0.01 32768 256 258 0.1 26";
+		flowdesc[24]="OBDB NAVC 0.15 524288 4096 4098 2.0 38";
+		flowdesc[25]="OBDB OBMG 0.15 524288 4096 4098 2.0 36";
+		flowdesc[26]="OBMG OBDB 0.4 131072 1024 1026 1 34";
+		flowdesc[27]="POSI NAVC 0.005 16384 128 130 0.5 31";
+		flowdesc[28]="POSI OBMG 0.005 16384 128 130 0.5 32";
+		flowdesc[29]="SPES NAVC 0.005 16384 128 130 0.1 25";
+		flowdesc[30]="SPES STAC 0.005 32768 256 258 0.1 29";
+		flowdesc[31]="STAC THRC 0.01 16384 128 130 0.1 30";
+		flowdesc[32]="STAC TPRC 0.02 32768 256 258 1 35";
+		flowdesc[33]="STPH OBMG 0.02 131072 1024 1026 0.04 23";
+		flowdesc[34]="TPMS STAC 0.005 65536 512 514 0.5 33";
+		flowdesc[35]="USOS OBMG 0.005 32768 256 258 0.1 27";
+		flowdesc[36]="VIBS STAC 0.005 16384 128 130 0.1 28";
+		flowdesc[37]="VOD1 NAVC 0.02 16384 128 130 0.04 3";
+		flowdesc[38]="VOD2 NAVC 0.02 16384 128 130 0.04 4";
+
+
+
+
+		for (int i=1;i<flowdesc.length;i++){
+
+			StringTokenizer st = new StringTokenizer(flowdesc[i]);
+			String so = st.nextToken();
+			String de = st.nextToken();
+			String scomptime = st.nextToken();
+			double comptime = Double.parseDouble(scomptime);
+			String bits = st.nextToken();
+			String flits = st.nextToken();
+			String total = st.nextToken();
+			int payload = Integer.parseInt(total);
+			String speriod = st.nextToken();
+			double period = Double.parseDouble(speriod);
+			String spriority = st.nextToken();
+			int priority = Integer.parseInt(spriority);
+			//		String sjitter = st.nextToken();
+			//		double jitter = Double.parseDouble(sjitter);
+
+
+
+			PriorityTask source = new PriorityTask(priority, comptime);
+			source.setName(so);
+			source.setPeriod(period);
+
+			PriorityTask dest = new PriorityTask(priority*100, 0.0);
+			dest.setName(de);
+			dest.setPeriod(period);
+
+			source.setReleaseJitter(0);
+			dest.setReleaseJitter(0);
+			tasks.add(source);
+			tasks.add(dest);
+
+			checkGrouping(source);
+			checkGrouping(dest);
+
+			PriorityTrafficFlow flow = new PriorityTrafficFlow(source, dest);			
+			flow.setPeriod(period);
+			flow.setPriority(priority);
+			flow.setPayload(payload);
+
+			flows.add(flow);
+
+
+		}
+
+	}
+
+
+	public void checkGrouping(PriorityTask source){
+
+
+		for(int m=0;m<tasks.size();m++){
+			PriorityTask pt = tasks.get(m);
+			if(source != pt && source.getName().equals(pt.getName())){
+				if(pt.getGroupStatus()==0){
+					source.group.add(pt);
+					source.setGroupStatus(1);
+					pt.setGroupStatus(2);
+				}
+				else if(pt.getGroupStatus()==1){
+					pt.group.add(source);
+					source.setGroupStatus(2);
+				}
+
+			}
+
+		}
+
+
+	}
+
+	private Point mapping(String task){
+		
+
+		if(task.equals("FBU4")) return new Point(0,0);
+		else if(task.equals("TPMS")) return new Point(0,0);
+		else if(task.equals("USOS")) return new Point(0,0);
+		else if(task.equals("BFE4")) return new Point(1,0);
+		else if(task.equals("THRC")) return new Point(1,0);
+		else if(task.equals("BFE8")) return new Point(2,0);
+		else if(task.equals("VOD2")) return new Point(2,0);
+		else if(task.equals("FBU8")) return new Point(3,0);
+		else if(task.equals("DIRC")) return new Point(3,0);
+		else if(task.equals("FBU3")) return new Point(0,1);
+		else if(task.equals("OBDB")) return new Point(0,1);
+		else if(task.equals("FDF2")) return new Point(1,1);
+		else if(task.equals("BFE3")) return new Point(1,1);
+		else if(task.equals("STPH")) return new Point(2,1);
+		else if(task.equals("BFE7")) return new Point(2,1);
+		else if(task.equals("FBU7")) return new Point(3,1);
+		else if(task.equals("SPES")) return new Point(3,1);
+		else if(task.equals("FBU2")) return new Point(0,2);
+		else if(task.equals("OBMG")) return new Point(0,2);
+		else if(task.equals("BFE2")) return new Point(1,2);
+		else if(task.equals("NAVC")) return new Point(1,2);
+		else if(task.equals("BFE6")) return new Point(2,2);
+		else if(task.equals("FDF1")) return new Point(2,2);
+		else if(task.equals("FBU6")) return new Point(3,2);
+		else if(task.equals("STAC")) return new Point(3,2);
+		else if(task.equals("FBU1")) return new Point(0,3);
+		else if(task.equals("POSI")) return new Point(0,3);
+		else if(task.equals("VOD1")) return new Point(1,3);
+		else if(task.equals("BFE1")) return new Point(1,3);
+		else if(task.equals("BFE5")) return new Point(2,3);
+		else if(task.equals("VIBS")) return new Point(2,3);
+		else if(task.equals("FBU5")) return new Point(3,3);
+		else if(task.equals("TPRC")) return new Point(3,3);
+		else return null;
+
+	}
+
+
+	public String getMappingString(){
+		String map="\"";
+
+		ArrayList<String>[][] cores = new ArrayList[x][y];
+		for(int i=0;i<x;i++){
+			for(int j=0;j<y;j++){cores[i][j]=new ArrayList<String>();}
+		}
+
+		for(int i=0;i<tasks.size();i++){
+
+			ProcessingCore pc = tasks.get(i).getCore();
+			Point p = network.getMeshLocation(pc);
+			boolean contains=false;
+			
+			for(int c=0;c<cores[p.x][p.y].size();c++){
+				
+				String s = cores[p.x][p.y].get(c);
+				if(s.equals(tasks.get(i).getName())){contains=true;}
+			}
+			
+			if(!contains){cores[p.x][p.y].add(tasks.get(i).getName());}
+
+		}
+		
+		boolean keepdoing=true;	
+		while(keepdoing){
+			keepdoing=false;
+			for(int i=0;i<y;i++){
+				for(int j=0;j<x;j++){
+					if(!cores[j][i].isEmpty()){
+						String s = cores[j][i].remove(0);
+						map=map +","+s;
+						keepdoing=true;
+					}
+					else{
+						map=map +",nomap";						
+					}
+				}
+			}
+		}
+
+		map=map+"\"";
+		return map;
+	}
+
+
+
+
+}

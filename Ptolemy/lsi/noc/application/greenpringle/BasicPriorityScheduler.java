@@ -1,0 +1,210 @@
+package lsi.noc.application.greenpringle;
+
+import ptolemy.actor.Actor;
+import ptolemy.actor.Director;
+import ptolemy.actor.util.Time;
+import ptolemy.data.DoubleToken;
+import ptolemy.data.IntToken;
+import ptolemy.data.RecordToken;
+import ptolemy.data.Token;
+import ptolemy.kernel.CompositeEntity;
+import ptolemy.kernel.util.IllegalActionException;
+import ptolemy.kernel.util.NameDuplicationException;
+
+import java.util.Iterator;
+import java.util.Vector;
+
+/**
+ * 
+ * @author Osmar M. dos Santos
+ * @version 0.1 (York, 24/3/2010)
+ * @version 0.2 (York, 31/3/2010) Leandro Soares Indrusiak
+ */
+public class BasicPriorityScheduler {
+
+	// Enable debugging messages in this class
+	private boolean _debug = false;
+
+	// Priority Queues
+	protected int queueSize;
+	protected Vector<ProcessControlBlock>[] prioQueue; // one queue per priority
+														// level
+
+	// Current process executing
+	private ProcessControlBlock currentProcess;
+	// Last process executing
+	private ProcessControlBlock lastProcess;
+
+	// Current time
+	private Time currentTime;
+	private Time lastTime;
+
+	// Reference to the director (time purposes)
+	VCProducerCBwithPriorityScheduler hardware;
+
+	public BasicPriorityScheduler(int queueSize,
+			VCProducerCBwithPriorityScheduler hardware) {
+		// Initialise priority queue
+		this.queueSize = queueSize;
+		prioQueue = new Vector[queueSize];
+		for (int i = 0; i < queueSize; i++) {
+			prioQueue[i] = new Vector<ProcessControlBlock>();
+		}
+		// Set reference to the hardware (producer)
+		this.hardware = hardware;
+		// Initialise time ...
+		currentTime = hardware.getDirector().getModelTime();
+		lastTime = currentTime;
+	}
+
+	public void addProcess(Token token, int x, int y, int id, int size,
+			int subPacketSize, Double totalComputation, int priority) {
+		ProcessControlBlock newProcess = new ProcessControlBlock(token, x, y,
+				id, size, subPacketSize, totalComputation, priority, hardware
+						.getDirector().getModelTime().getDoubleValue());
+		if (_debug)
+			System.out.println("Add Process: Process = " + newProcess.getId()
+					+ " Prio = " + newProcess.getPriority());
+		if (_debug)
+			System.out.println("Add Process: Producer ID = "
+					+ hardware.toString());
+
+		addToPrioQueue(newProcess);
+		interruptHandler();
+	}
+
+	// Add process to the tail of its priority queue
+	protected void addToPrioQueue(ProcessControlBlock newProcess) {
+		prioQueue[newProcess.getPriority()].add(newProcess);
+	}
+
+	// Remove process from its priority queue
+	protected void removeFromPrioQueue(ProcessControlBlock oldProcess) {
+		prioQueue[oldProcess.getPriority()].remove(oldProcess);
+	}
+
+	public void interrupt() {
+		interruptHandler();
+	}
+
+	protected synchronized void interruptHandler() {
+		// Since time does not pass in the simulation, we can treat the
+		// time values at the start of the interrupt handling function
+		currentTime = hardware.getDirector().getModelTime();
+		Time elapsedTime = currentTime.subtract(lastTime);
+		lastTime = currentTime;
+		// Check if there is a current process
+		if (currentProcess != null) {
+			// If the current process has finished its execution
+			if (currentProcess.hasFinished(elapsedTime.getDoubleValue())) {
+				// Send packet for the current process that has finished
+				sendPacket();
+				// Remove the current process from the queue
+				removeFromPrioQueue(currentProcess);
+			} else {
+
+				if (_debug)
+					System.out.println("Current process "
+							+ currentProcess.getId() + " has not finished!!");
+
+			}
+		}
+		// Calls a new scheduling
+		doSchedule();
+		// If the scheduling has found a new process, set timer
+		if (currentProcess != null) {
+			// Set next timer
+			hardware.setTimer(currentProcess.getRemainingComputationTime());
+		}
+	}
+
+	protected synchronized void doSchedule() {
+		// If found a process, set foundProcess to true
+		boolean foundProcess = false;
+		for (int i = 0; i < queueSize && !foundProcess; i++) {
+			Iterator<ProcessControlBlock> iterator = prioQueue[i].iterator();
+			// Find a process to execute the processor
+			ProcessControlBlock process;
+			while (iterator.hasNext()) {
+				process = iterator.next();
+				// A process different from the current has been found
+				if (process.getState() == process.waiting) {
+					// Context switch between the two process
+					contextSwitch(process, currentProcess);
+					// Set flag foundProcess to true
+					foundProcess = true;
+					break;
+					// The current process has been the one found (no need for
+					// context switching)
+				} else if (process.getState() == process.running) {
+
+					if (_debug)
+						System.out.println("Process " + currentProcess.getId()
+								+ " is running!");
+
+					// Set flag foundProcess to true
+					foundProcess = true;
+					break;
+				}
+			}
+		}
+		// If no process has been found, the current process is set to null
+		if (!foundProcess) {
+			currentProcess = null;
+		}
+	}
+
+	// At the end of its computation, the process sends its packet
+	protected void sendPacket() {
+
+		if (_debug)
+			System.out.println("Send Packet: Current = "
+					+ currentProcess.getId());
+		if (_debug)
+			System.out.println("Send Packet: Current priority = "
+					+ currentProcess.getPriority());
+
+		try {
+			hardware.sendPacket(currentProcess.getPacketToken(),
+					currentProcess.getPacketDstX(),
+					currentProcess.getPacketDstY(),
+					currentProcess.getPacketId(),
+					currentProcess.getPacketSize(),
+					currentProcess.getSubPacketSize(),
+					currentProcess.getPacketPriority(),
+					currentProcess.getReleaseTime());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	// TODO: Could be used to add context switch overheads to the simulation ...
+	protected void contextSwitch(ProcessControlBlock newProcess,
+			ProcessControlBlock previousProcess) {
+		// Set running state for the current process
+		currentProcess = newProcess;
+		currentProcess.setState(currentProcess.running);
+		// TODO: There is a case where a context switch occurs and the previous
+		// process has finished
+		// In this case, the scheduling still works, although the statements
+		// below will not make
+		// any different, since the process has already been removed from the
+		// priority queue
+		// Initially the last process is null
+		if (previousProcess != null) {
+			// Set waiting state for the previus process
+			lastProcess = previousProcess;
+			lastProcess.setState(lastProcess.waiting);
+
+			if (_debug)
+				System.out.println("Context Switch: Current = "
+						+ currentProcess.getId() + "; Last = "
+						+ lastProcess.getId());
+			if (_debug)
+				System.out.println("Context Switch: Current priority = "
+						+ currentProcess.getPriority() + "; Last priority = "
+						+ lastProcess.getPriority());
+
+		}
+	}
+}

@@ -1,0 +1,350 @@
+package lsi.noc.nocscope;
+
+import java.util.Iterator;
+import java.util.List;
+import javax.swing.JFrame;
+import java.io.*;
+import java.util.*;
+
+import ptolemy.actor.IOPort;
+import ptolemy.data.DoubleToken;
+import ptolemy.data.RecordToken;
+import ptolemy.data.BooleanToken;
+import ptolemy.data.Token;
+import ptolemy.data.type.BaseType;
+import ptolemy.kernel.CompositeEntity;
+import ptolemy.kernel.util.IllegalActionException;
+import ptolemy.kernel.util.NameDuplicationException;
+import ptolemy.actor.parameters.FilePortParameter;
+import ptolemy.data.StringToken;
+import ptolemy.data.expr.Parameter;
+import ptolemy.kernel.util.Attribute;
+import ptolemy.actor.util.Time;
+
+/**
+ *
+ * Base class for all NoCScopeActors. Handles its input ports in a bidimentional array,
+ * which shows during run-time the average dynamic power dissipation
+ * of each buffer regarding the received transmission rate defined
+ * inside a given sample period.
+ * Copyright (c) 2007 - All rights reserved. <br>
+ * @version 1.0 (Darmstadt)
+ * @author Leandro Indrusiak
+ * @version 2.0 (Porto Alegre, 13.03.2009)
+ * @author Luciano Ost
+ *
+ */
+
+public class PowerScopeActor extends NoCScopeActor {
+
+    private FileOutputStream fileOut;
+    private DataOutputStream dataOutput;
+    private String newFileName, RoterID;
+    private double av_routerPC, av_rate, av_switchCrtl, buffer_avpc;
+    private Vector avRoterPC;
+    private int width, n_interaction, vector_position, dimX, dimY;
+    private double avrate, buffer_VD, buffer_BD, switchCrtl_VD, switchCrtl_BD;
+    private boolean PS_visible;
+
+    protected Time current_time;
+
+	public PowerScopeActor(CompositeEntity container, String name)
+	throws NameDuplicationException, IllegalActionException  {
+		super(container, name);
+		_frame=new JFrame("PowerScope");
+
+		setVisible = new Parameter(this, "setVisible");
+		setVisible.setTypeEquals(BaseType.BOOLEAN);
+		setVisible.setExpression("true");
+
+		// Power Dissipation Parameters
+		BVD = new Parameter(this, "BVD - Buffer Variable Dissipation");
+		BVD.setTypeEquals(BaseType.DOUBLE);
+		BVD.setExpression("0.00382359");
+
+		BBD = new Parameter(this, "BBD - Buffer Base Dissipation");
+		BBD.setTypeEquals(BaseType.DOUBLE);
+		BBD.setExpression("4.04988");
+
+		SCVD = new Parameter(this, "Switch Control Variable Dissipation");
+		SCVD.setTypeEquals(BaseType.DOUBLE);
+		SCVD.setExpression("0.00171358");
+
+		SCBD = new Parameter(this, "Switch Control Base Dissipation");
+		SCBD.setTypeEquals(BaseType.DOUBLE);
+		SCBD.setExpression("1.24239");
+	}
+	 //Parameters
+	public Parameter setVisible;
+	public Parameter BVD;
+	public Parameter BBD;
+	public Parameter SCVD;
+	public Parameter SCBD;
+
+	/**
+	 * Set the incial state
+	 */
+	public void initialize() throws IllegalActionException {
+		super.initialize();
+
+		PS_visible =((BooleanToken)setVisible.getToken()).booleanValue();
+
+		buffer_VD =((DoubleToken)BVD.getToken()).doubleValue();
+		buffer_BD =((DoubleToken)BBD.getToken()).doubleValue();
+		switchCrtl_VD =((DoubleToken)SCVD.getToken()).doubleValue();
+		switchCrtl_BD =((DoubleToken)SCBD.getToken()).doubleValue();
+
+		avRoterPC = new Vector();
+
+		n_interaction = 0;
+
+		try {
+			// Set the initial Path
+			String path = System.getProperties().getProperty("user.dir") + "/lsi/noc/joselito/handshake/";
+
+			// Write to temp file
+			fileOut=new FileOutputStream(path + "PowerReport.txt");
+			dataOutput=new DataOutputStream(fileOut);
+			} catch (IOException ex) {
+		}
+	}
+
+	public void fire() throws IllegalActionException{
+		super.fire();
+
+		/*try{
+			dataOutput.writeBytes("==================== Power Estimation at Time = "+ getDirector().getModelTime()+" ====================\n");
+		} catch (IOException e) {}*/
+
+		List l = portList();
+		Iterator ite = l.iterator();
+
+		int port=0;
+		while(ite.hasNext()){
+			IOPort p = (IOPort)ite.next();
+			RoterID = p.getName();
+			if(p.isInput()){
+				int width=p.getWidth();
+				for(int i=0;i<width;i++){
+					if(p.hasToken(i)){
+						Token t = p.get(i);
+						if(t instanceof RecordToken){
+							RecordToken record = (RecordToken) t;
+							double e = ((DoubleToken)record.get("e")).doubleValue();
+							double w = ((DoubleToken)record.get("w")).doubleValue();
+							double n = ((DoubleToken)record.get("n")).doubleValue();
+							double s = ((DoubleToken)record.get("s")).doubleValue();
+							double local = ((DoubleToken)record.get("l")).doubleValue();
+
+							//Get the router Type
+							String routerType = getRouterType(port, ((width-1)-i), width, width);
+
+							double AvRPC = 0;
+
+							if(routerType == "RouterCC"){
+								double avRR = (e + w + n + s + local)/5;
+								AvRPC = (getBufferAPC(e) + getBufferAPC(w) + getBufferAPC(n) + getBufferAPC(s) + getBufferAPC(local)) + getAvSwitchCrtl(avRR);
+								setRouterAvPC(AvRPC);
+
+								if(PS_visible){
+									//Fill out the Average Power Consumption of each Buffer in the PowerScope
+									((PowerScope)_nocscope).getSwitch(port, i).setEast(druncate(getBufferAPC(e)));
+									((PowerScope)_nocscope).getSwitch(port, i).setWest(druncate(getBufferAPC(w)));
+									((PowerScope)_nocscope).getSwitch(port, i).setNorth(druncate(getBufferAPC(n)));
+									((PowerScope)_nocscope).getSwitch(port, i).setSouth(druncate(getBufferAPC(s)));
+									((PowerScope)_nocscope).getSwitch(port, i).setLocal(druncate(getBufferAPC(local)));
+								}
+							}
+							else if(routerType == "RouterTC"){
+								double avRR = (e + w + s + local)/4;
+								AvRPC = (getBufferAPC(e) + getBufferAPC(w) + getBufferAPC(s) + getBufferAPC(local)) + getAvSwitchCrtl(avRR);
+								setRouterAvPC(AvRPC);
+
+								if(PS_visible){
+									((PowerScope)_nocscope).getSwitch(port, i).setEast(druncate(getBufferAPC(e)));
+									((PowerScope)_nocscope).getSwitch(port, i).setWest(druncate(getBufferAPC(w)));
+									((PowerScope)_nocscope).getSwitch(port, i).setSouth(druncate(getBufferAPC(s)));
+									((PowerScope)_nocscope).getSwitch(port, i).setLocal(druncate(getBufferAPC(local)));
+								}
+							}
+							else if(routerType == "RouterCL"){
+								double avRR = (e + n + s + local)/4;
+								AvRPC = (getBufferAPC(e) + getBufferAPC(n) + getBufferAPC(s) + getBufferAPC(local)) + getAvSwitchCrtl(avRR);
+								setRouterAvPC(AvRPC);
+								if(PS_visible){
+									((PowerScope)_nocscope).getSwitch(port, i).setEast(druncate(getBufferAPC(e)));
+									((PowerScope)_nocscope).getSwitch(port, i).setNorth(druncate(getBufferAPC(n)));
+									((PowerScope)_nocscope).getSwitch(port, i).setSouth(druncate(getBufferAPC(s)));
+									((PowerScope)_nocscope).getSwitch(port, i).setLocal(druncate(getBufferAPC(local)));
+								}
+							}
+							else if(routerType == "RouterCR"){
+								double avRR = (w + n + s + local)/4;
+								AvRPC = (getBufferAPC(w) + getBufferAPC(s) + getBufferAPC(n) + getBufferAPC(local)) + getAvSwitchCrtl(avRR);
+								setRouterAvPC(AvRPC);
+								if(PS_visible){
+									((PowerScope)_nocscope).getSwitch(port, i).setWest(druncate(getBufferAPC(w)));
+									((PowerScope)_nocscope).getSwitch(port, i).setNorth(druncate(getBufferAPC(n)));
+									((PowerScope)_nocscope).getSwitch(port, i).setSouth(druncate(getBufferAPC(s)));
+									((PowerScope)_nocscope).getSwitch(port, i).setLocal(druncate(getBufferAPC(local)));
+								}
+							}
+							else if(routerType == "RouterBC"){
+								double avRR = (e + w + n + local)/4;
+								AvRPC = (getBufferAPC(e) + getBufferAPC(w) + getBufferAPC(n) + getBufferAPC(local)) + getAvSwitchCrtl(avRR);
+								setRouterAvPC(AvRPC);
+								if(PS_visible){
+									((PowerScope)_nocscope).getSwitch(port, i).setEast(druncate(getBufferAPC(e)));
+									((PowerScope)_nocscope).getSwitch(port, i).setWest(druncate(getBufferAPC(w)));
+									((PowerScope)_nocscope).getSwitch(port, i).setNorth(druncate(getBufferAPC(n)));
+									((PowerScope)_nocscope).getSwitch(port, i).setLocal(druncate(getBufferAPC(local)));
+								}
+							}
+							else if(routerType == "RouterTL"){
+								double avRR = (e + s + local)/3;
+								AvRPC = (getBufferAPC(e) + getBufferAPC(s) + getBufferAPC(local)) + getAvSwitchCrtl(avRR);
+								setRouterAvPC(AvRPC);
+								if(PS_visible){
+									((PowerScope)_nocscope).getSwitch(port, i).setEast(druncate(getBufferAPC(e)));
+									((PowerScope)_nocscope).getSwitch(port, i).setSouth(druncate(getBufferAPC(s)));
+									((PowerScope)_nocscope).getSwitch(port, i).setLocal(druncate(getBufferAPC(local)));
+								}
+							}
+							else if(routerType == "RouterTR"){
+								double avRR = (w + s + local)/3;
+								AvRPC = (getBufferAPC(w) + getBufferAPC(s) + getBufferAPC(local)) + getAvSwitchCrtl(avRR);
+								setRouterAvPC(AvRPC);
+								if(PS_visible){
+									((PowerScope)_nocscope).getSwitch(port, i).setWest(druncate(getBufferAPC(w)));
+									((PowerScope)_nocscope).getSwitch(port, i).setSouth(druncate(getBufferAPC(s)));
+									((PowerScope)_nocscope).getSwitch(port, i).setLocal(druncate(getBufferAPC(local)));
+								}
+							}
+							else if(routerType == "RouterBL"){
+								double avRR = (e + n + local)/3;
+								AvRPC = (getBufferAPC(e) + getBufferAPC(n) + getBufferAPC(local)) + getAvSwitchCrtl(avRR);
+								setRouterAvPC(AvRPC);
+								if(PS_visible){
+									((PowerScope)_nocscope).getSwitch(port, i).setEast(druncate(getBufferAPC(e)));
+									((PowerScope)_nocscope).getSwitch(port, i).setNorth(druncate(getBufferAPC(n)));
+									((PowerScope)_nocscope).getSwitch(port, i).setLocal(druncate(getBufferAPC(local)));
+								}
+							}
+							else if(routerType == "RouterBR"){
+								double avRR = (w + n + local)/3;
+								AvRPC = (getBufferAPC(w) + getBufferAPC(n) + getBufferAPC(local)) + getAvSwitchCrtl(avRR);
+								 setRouterAvPC(AvRPC);
+								 if(PS_visible){
+									((PowerScope)_nocscope).getSwitch(port, i).setWest(druncate(getBufferAPC(w)));
+									((PowerScope)_nocscope).getSwitch(port, i).setNorth(druncate(getBufferAPC(n)));
+									((PowerScope)_nocscope).getSwitch(port, i).setLocal(druncate(getBufferAPC(local)));
+								 }
+							}
+							/*try{
+								dataOutput.writeBytes("Router"+ port + i+ " Average Consumption "+ AvRPC + "\n");
+							} catch (IOException ex) {}*/
+
+						}
+					}
+				}
+			}
+			port++;
+		}//close while
+		_nocscope.repaint();
+		vector_position=0;
+		//store the number of Sample Windows defined by the designer
+		n_interaction++;
+	}
+
+	public NoCScope createScope() {
+		return new PowerScope(nports,maxwidth);
+	}
+
+	    /* Buffer Average Power Consumption - For each reception rate,
+	       the associated power dissipation is calculated regarding
+	       the buffer_VD and buffer_BD.
+	       where: buffer_VD = buffer variable dissipation
+	              buffer_BD = buffer base dissipation */
+	    private double getBufferAPC(double rate){
+			buffer_avpc = (buffer_VD * rate) + buffer_BD;
+			return buffer_avpc;
+		}
+
+		/* Returns the average reception rate */
+		private double getAvRouterRate(double e, double w, double s, double n, double local, int ports){
+			av_rate = (e + w + s + n + local)/ports;
+			return av_rate;
+		}
+
+		/* Average Switch Control*/
+		// where: switchCrtl_VD = Switch Control Variable Dissipation
+		//        switchCrtl_BD = Switch Control Base Dissipation
+		private double getAvSwitchCrtl(double avrate){
+			av_switchCrtl = (switchCrtl_VD * avrate ) + switchCrtl_BD;
+			return av_switchCrtl;
+		}
+
+		public void setRouterAvPC(double AvPC){
+			 if(n_interaction==0)
+			 	avRoterPC.add(vector_position, AvPC);
+			 else{
+				 Double old_value =(Double)avRoterPC.elementAt(vector_position);
+				 double new_value = old_value + AvPC;
+			 	 avRoterPC.setElementAt(new_value, vector_position);
+			 }
+			 vector_position++;
+		}
+
+		/**Trunc Function
+		 */
+		private double druncate (double x)
+			{
+			long y = (long) (x * 100);
+			return (double) y / 100;
+		}
+
+   	/**
+	* @Function: Returns the ROUTER TYPE
+	* e.g. RouterTL - router located on the TOP LEFT side of the NoC)
+	*/
+	private String getRouterType(int x,int y,int dimX,int dimY)
+		{
+		String routerType;
+		if (x==0){
+			if (y==0)            routerType = "RouterBL";
+			else if(y==(dimY-1)) routerType = "RouterTL";
+			else                 routerType = "RouterCL";
+		}
+		else if(x==(dimX-1)){
+			if(y==0)             routerType = "RouterBR";
+			else if(y==(dimY-1)) routerType = "RouterTR";
+			else                 routerType = "RouterCR";
+		}
+		else{
+			if(y==0)             routerType = "RouterBC";
+			else if(y==(dimY-1)) routerType = "RouterTC";
+			else                 routerType = "RouterCC";
+		}
+		return routerType;
+	}
+
+	/** @Function:  void wrapup()
+	 */
+	public void wrapup() throws IllegalActionException
+	 {
+		try {
+			dataOutput.writeBytes("==================== Power Estimation at Time = "+ getDirector().getModelTime()+" ====================\n");
+			dataOutput.writeBytes("\n===================="+ " Routers Average Consumption ===================="+ "\n");
+			for (int i=0; i<avRoterPC.size(); i++){
+				Double avrouterPC =(Double)avRoterPC.elementAt(i);
+				double av_routerPC = avrouterPC/n_interaction;
+
+				dataOutput.writeBytes("Router"+ i+ " Average Consumption "+ av_routerPC +"\n");
+			}
+			dataOutput.close();
+			} catch (IOException e) {
+		}
+		System.out.println("PowerReport generated:-)");
+		super.wrapup();
+	}
+}

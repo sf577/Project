@@ -1,0 +1,46 @@
+package ptolemy.vergil.uml;
+
+import ptolemy.data.expr.Parameter;
+import ptolemy.kernel.util.StringAttribute;
+import ptolemy.kernel.util.IllegalActionException;
+import ptolemy.kernel.util.NameDuplicationException;
+import ptolemy.kernel.util.NamedObj;
+
+/* This class models a parameter that should be used as 
+ * superclass for all UML model elements. It includes a
+ * parameter that represents the UML name of the element, 
+ * which dowsn't have to follow Ptolemy's restrictions on
+ * name duplications.
+ * 
+ * @author Leandro Soares Indrusiak
+ * 
+ * last review: 09.05.07
+ */
+
+public class UMLParameter extends Parameter {
+
+	
+	private StringAttribute nameUML = new StringAttribute(this, "nameUML");
+	
+	public UMLParameter(NamedObj container, String name) 
+	throws IllegalActionException, NameDuplicationException {
+		super(container, name);
+		
+		//sets the Ptolemy name as the initial value of the UML name 
+		nameUML.setExpression(name);
+	}
+	
+	public void setUMLName(String s){
+		try{
+		nameUML.setExpression(s);
+		}
+		catch (IllegalActionException e) {}
+		
+	}
+	public String getUMLName() {
+		return nameUML.getExpression();
+			
+	}
+	
+
+}

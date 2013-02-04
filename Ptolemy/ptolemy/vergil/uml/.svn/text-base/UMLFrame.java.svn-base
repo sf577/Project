@@ -1,0 +1,171 @@
+package ptolemy.vergil.uml;
+
+import java.util.Iterator;
+
+import ptolemy.actor.gui.Tableau;
+import ptolemy.kernel.util.Attribute;
+import ptolemy.kernel.util.NamedObj;
+import ptolemy.moml.LibraryAttribute;
+import ptolemy.moml.MoMLChangeRequest;
+import ptolemy.util.MessageHandler;
+import ptolemy.vergil.basic.BasicGraphFrame;
+import diva.canvas.Figure;
+import diva.canvas.interactor.DragInteractor;
+import diva.canvas.interactor.SelectionModel;
+import diva.graph.GraphController;
+import diva.graph.GraphEvent;
+import diva.graph.GraphPane;
+
+
+/**
+ * This is a top-level window which enables the view of a PtolemyII model 
+ * as a UML sequence diagram. The Look & Feel is based on the graphical
+ * representations used within PtolemyII (Vergil).
+ * 
+ * @author Andreas Thuy
+ * 
+ * last review: 11.06.06
+ */
+public class UMLFrame extends BasicGraphFrame {
+
+	private UMLGraphController _controller;
+	DragInteractor dragger;
+
+	
+	/**
+	 * Calls three-argument constructor with defaultLibrary = null.
+	 * 
+	 * @param entity
+	 * @param tableau
+	 */
+	public UMLFrame(NamedObj entity, Tableau tableau) {		
+		this(entity, tableau, null);
+	}
+
+
+	/**
+	 * Creates a UMLFrame.
+	 * 
+	 * @param entity
+	 * @param tableau
+	 * @param defaultLibrary
+	 */
+	public UMLFrame(NamedObj entity, Tableau tableau,
+			LibraryAttribute defaultLibrary) {		
+		super(entity, tableau, defaultLibrary);
+		_dropTarget = new UMLEditorDropTarget(getJGraph());
+		this._library.setRowHeight(36);
+		this._library.setCellRenderer(new UMLTreeCellRenderer());
+	}
+
+	/* (non-Javadoc)
+	 * @see ptolemy.gui.Top#_addMenus()
+	 */
+	protected void _addMenus() {		
+		super._addMenus();
+		_controller.addToMenuAndToolbar(null, _toolbar);
+	}
+
+	/**
+	 * This frame is controlled by a UMLGraphController and the underlying
+	 * model corresponds to an ActorGraphModel.
+	 * 
+	 * @return a GraphPane that is controlled by a UMLGraphController and
+	 * that is based on an ActorGraphModel
+	 * @see ptolemy.vergil.basic.BasicGraphFrame#_createGraphPane()
+	 */
+	protected GraphPane _createGraphPane(NamedObj abu) {				
+		_controller = new UMLGraphController();		
+		if(getConfiguration() != null)
+			_controller.setConfiguration(getConfiguration());
+		else
+			// TODO what happens if there is no configuration?
+			System.out.println("JUCHUUUUUUUUU!");
+		
+		_controller.setFrame(this);			
+		//ActorGraphModel model = new ActorGraphModel((CompositeEntity)getModel());
+		UMLGraphModel model = new UMLGraphModel(getModel());
+		GraphPane gPane = new GraphPane(_controller, model);
+		
+		((UMLSeqActor)model.getRoot()).addChangeListener(_controller);
+		
+		return gPane;
+	}
+
+
+	// Created with the help of the Copy & Paste antipattern
+	// source: BasicGraphFrame.delete()
+	public void delete() {        
+
+        // prepare to get all selected items on the graph pane
+		// in the UML Editor, there is normally only ONE item selected!
+		GraphPane graphPane = getJGraph().getGraphPane();
+        GraphController controller
+            = (GraphController)graphPane.getGraphController();
+        SelectionModel model = controller.getSelectionModel();
+
+        UMLGraphModel graphModel
+            = (UMLGraphModel)controller.getGraphModel();
+        Object selection[] = model.getSelectionAsArray();
+
+        // First collect selected objects into the userObjects array
+        // and deselect them.
+        Object userObjects[] = new Object[selection.length];
+        for (int i = 0; i < selection.length; i++) {
+            userObjects[i] = ((Figure)selection[i]).getUserObject();
+            model.removeSelection(selection[i]);
+        }
+
+        // Generate the MoML to carry out the deletion
+        StringBuffer moml = new StringBuffer("<group>\n");
+
+        // delete Lifelines and Messages
+        // deleting a Lifeline may result in deleting Messages that put
+        // either a send occurrence or a receive occurrence on that Lifeline
+        for (int i = 0; i < selection.length; i++) {
+            Object userObject = userObjects[i];
+            if (graphModel.isNode(userObject)) {
+                moml.append(graphModel.getDeleteNodeMoML(userObject));
+                Iterator msgsToDelete = graphModel.getLifelineModel().outEdges(userObject);
+                while(msgsToDelete.hasNext()) {
+                	Message msgToDelete = (Message)msgsToDelete.next();
+                	moml.append(graphModel.getDeleteEdgeMoML(msgToDelete));
+                }
+                msgsToDelete = graphModel.getLifelineModel().inEdges(userObject);
+                while(msgsToDelete.hasNext()) {
+                	Message msgToDelete = (Message)msgsToDelete.next();                	
+                	moml.append(graphModel.getDeleteEdgeMoML(msgToDelete));
+                }
+            }
+        }
+        
+        for(int i = 0; i < selection.length; i++) {
+        	Object userObject = userObjects[i];
+        	if(graphModel.isEdge(userObject)) {
+        		moml.append(graphModel.getDeleteEdgeMoML(userObject));
+        	}
+        }
+
+        moml.append("</group>\n");
+
+        // Next process the deletion MoML. 
+        try {
+            // Finally create and request the change
+            NamedObj container = graphModel.getPtolemyModel();
+            MoMLChangeRequest change
+                = new MoMLChangeRequest(this, container, moml.toString());
+            change.setUndoable(true);
+            container.requestChange(change);
+        }
+        catch (Exception ex) {
+            MessageHandler.error("Delete failed, changeRequest was:" + moml,
+                    ex);
+        }
+        graphModel.dispatchGraphEvent(
+                new GraphEvent(
+                        this,
+                        GraphEvent.STRUCTURE_CHANGED,
+                        graphModel.getRoot()));
+
+	}
+}
