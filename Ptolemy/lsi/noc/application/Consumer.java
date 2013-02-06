@@ -55,7 +55,7 @@ public abstract class Consumer extends PlatformCommunicationInterface {
 
 		NamedObj container = getContainer();
 
-		return container.getAttribute("LifelineMapper");
+		return container.getAttribute("DynamicMapper");
 
 	}
 
@@ -90,7 +90,7 @@ public abstract class Consumer extends PlatformCommunicationInterface {
 	}
 
 	protected int actorID_;
-	protected LifelineMapper mapper_; // Instance of the mapper
+	protected DynamicMapper mapper_; // Instance of the mapper
 	protected int state_; // Either receiving header or trailer
 	protected int id_; // Packet id is used to tell the mapper, which packet
 						// just arrived

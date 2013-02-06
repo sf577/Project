@@ -1,15 +1,10 @@
-/**
- * 
- */
 package lsi.noc.application;
 
 import java.util.ArrayList;
-
-import ptolemy.kernel.CompositeEntity;
+import ptolemy.kernel.ComponentEntity;
 import ptolemy.kernel.util.Attribute;
 import ptolemy.kernel.util.IllegalActionException;
 import ptolemy.kernel.util.NameDuplicationException;
-import ptolemy.kernel.util.NamedObj;
 
 /**
  * @author Steven
@@ -18,29 +13,28 @@ import ptolemy.kernel.util.NamedObj;
 @SuppressWarnings("serial")
 public class Application extends Attribute {
 	
-	 public Application(){
-	        super();
-	        
-	    }
-
-	    public Application(NamedObj container, String name)
+	    public Application(ComponentEntity container, String name)
 	    throws IllegalActionException, NameDuplicationException {
 	            super(container, name);
-	            
-	            Tasks = new ArrayList<Task>(10);
-	            for(int i = 0; i == 9; i++){
-	            	Task t = new Task();
-	            	t.applicationid = 1;
-	            	t.Id = i;
-	            	Tasks.add(t);
-	            }
-	            initial = Tasks.get(0);
-	            this.setDependancies();
 	    }
 	            
 
-
+	    public void fire(){
+	    	System.out.println("Fired");
+	    	Tasks = new ArrayList<Task>(10);
+            for(int i = 0; i == 9; i++){
+            	Task t = new Task();
+            	t.applicationid = 1;
+            	t.Id = i;
+            	Tasks.add(t);
+            }
+            initial = Tasks.get(0);
+            this.setDependancies();
+	    }
+	    
 	    private void setDependancies() {
+	    	
+
 			
 			initial.addcommunication(Tasks.get(1));
 			initial.addcommunication(Tasks.get(2));

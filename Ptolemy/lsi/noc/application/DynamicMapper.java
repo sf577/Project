@@ -1,11 +1,14 @@
 package lsi.noc.application;
 
+import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.List;
 
-import lsi.noc.stats.BasicCommunicationLatencyAnalysis;
+import lsi.noc.application.uml.directors.MappableSDDirector;
+import lsi.noc.stats.CommunicationLatencyAnalysis;
+
+import ptolemy.actor.util.Time;
 import ptolemy.data.DoubleToken;
-import ptolemy.data.IntToken;
 import ptolemy.data.Token;
 import ptolemy.kernel.CompositeEntity;
 import ptolemy.kernel.util.Attribute;
@@ -183,6 +186,33 @@ public class DynamicMapper extends Attribute {
 		}
 	}	
 	**/
+	
+	public void notifyMessageReceipt(int id, double sendTime, Time time, double latency)
+			throws IllegalActionException {
+
+		// Getting the message due to the id from the consumer
+		Communication c = MessagesIds_.get(new Integer(id));
+
+		// No need to store the message with its id in the hashtable any more
+		MessagesIds_.remove(new Integer(id));
+
+		// Getting the lifeline that "receives" the message
+		Task destination = com.getDest();
+		
+		destination.begin();
+
+		// logging the receipt time and latency
+
+
+		// Writing the messages receive time to a file
+		// write(time.getDoubleValue(), false, false, m, id);
+
+		// Writing the message's communication delay caused by the network
+		// Time time2 = time.subtract(sendTime);
+		// write(time2.getDoubleValue(), true, false, m, id);
+
+	}
+	
 
 	protected int xdimension = 0;
 	protected int ydimension = 0;
@@ -192,4 +222,5 @@ public class DynamicMapper extends Attribute {
 	protected int messageID_;
 	
 	protected Hashtable<Task, Producer> TaskProducer_ = new Hashtable<Task, Producer>();
+	protected Hashtable<Integer, Communication> MessagesIds_ = new Hashtable<Integer, Communication>();
 }

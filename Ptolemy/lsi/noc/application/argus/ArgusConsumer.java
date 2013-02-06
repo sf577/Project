@@ -13,7 +13,7 @@ import ptolemy.kernel.util.IllegalActionException;
 import ptolemy.kernel.util.NameDuplicationException;
 
 import lsi.noc.application.Consumer;
-import lsi.noc.application.LifelineMapper;
+import lsi.noc.application.DynamicMapper;
 
 /**
  * @author Sanna Maatta
@@ -39,7 +39,7 @@ public class ArgusConsumer extends Consumer {
 
 		try {
 
-			mapper_ = (LifelineMapper) getMapper();
+			mapper_ = (DynamicMapper) getMapper();
 
 		} catch (NameDuplicationException foo) {
 		}
