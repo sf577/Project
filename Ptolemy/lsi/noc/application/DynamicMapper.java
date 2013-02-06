@@ -1,11 +1,13 @@
 package lsi.noc.application;
 
+import java.util.Hashtable;
 import java.util.List;
 
 import lsi.noc.stats.BasicCommunicationLatencyAnalysis;
 import ptolemy.data.IntToken;
 import ptolemy.data.Token;
 import ptolemy.kernel.CompositeEntity;
+import ptolemy.kernel.util.Attribute;
 import ptolemy.kernel.util.IllegalActionException;
 import ptolemy.kernel.util.NameDuplicationException;
 import ptolemy.vergil.uml.Lifeline;
@@ -22,15 +24,27 @@ import ptolemy.vergil.uml.Message;
  */
 
 @SuppressWarnings("serial")
-public class DynamicMapper extends LifelineMapper {
+public class DynamicMapper extends Attribute {
 
 	public DynamicMapper(CompositeEntity container, String name)
 			throws IllegalActionException, NameDuplicationException {
 		super(container, name);
-		this.addCommunicationLatencyAnalysis(new BasicCommunicationLatencyAnalysis());
 	}
 
-	@Override
+	
+	public void sendMessage(Communication com){
+		Task source = com.getSource();
+		Task destination = com.getDest();
+		
+		this.checkMapping(source);
+		this.checkMapping(destination);
+		
+		Producer sender = TaskProducer_.get(source);
+		Producer receiver = TaskProducer_.get(destination);
+		
+		
+	}
+	/**@Override
 	public void sendMessage(Message m, Token t) throws IllegalActionException,
 			NameDuplicationException {
 		// Getting sending and receiving lifeline due to the message
@@ -70,15 +84,15 @@ public class DynamicMapper extends LifelineMapper {
 		updateMessages(messageID_, m);
 		messageID_ = messageID_ + 1;
 	}
+	**/
 
 	/**
 	 * checks that the receiving lifeline has been mapped by checking for its
 	 * existence in the lifelineproducers_ hash table if the lifeline hasn't
 	 * been mapped then perform mapping is called
 	 */
-	@Override
-	protected void checkMapping(Lifeline newLifeline)
-			throws IllegalActionException, NameDuplicationException {
+	protected void checkMapping(Task newTask) {
+		/**
 		// if the receiving lifeline has not been mapped then perform the
 		// mapping of that lifeline
 		boolean needsmapping = true;
@@ -94,6 +108,7 @@ public class DynamicMapper extends LifelineMapper {
 			System.out.println("Mapping Required for "+ newLifeline.getUMLName());
 			performMapping_(newLifeline);
 		}
+		**/
 	}
 
 	private void confirmMapping(Lifeline lifeline, Lifeline previousmapping) {
@@ -158,11 +173,5 @@ public class DynamicMapper extends LifelineMapper {
 	protected int lasty = 0;
 	protected List<Producer> producers_;
 	
-	
-	@Override
-	protected void performMapping_() throws IllegalActionException,
-			NameDuplicationException {
-		// TODO Auto-generated method stub
-		
-	}
+	protected Hashtable<Task, Producer> TaskProducer_ = new Hashtable<Task, Producer>();
 }
