@@ -134,7 +134,7 @@ public class StaticMapper extends LifelineMapper {
 											// doesn't exist, to enable a
 											// "no map"
 			if (b instanceof Lifeline) {
-				lifelinesProducer_.put(b, p);
+				lifelinesProducer_.put((Lifeline) b, p);
 
 				/*
 				 * System.out.println("mapping");
@@ -148,6 +148,16 @@ public class StaticMapper extends LifelineMapper {
 		}
 
 	}
+	
+	protected void checkMapping() throws IllegalActionException,
+	NameDuplicationException {
+
+		if (!mappingDone_) {
+	performMapping_();
+	mappingDone_ = true;
+}
+
+}
 
 	protected Producer nextProducer() throws IllegalActionException {
 
@@ -201,6 +211,6 @@ public class StaticMapper extends LifelineMapper {
 	protected int lastx = 0;
 	protected int lasty = 0;
 	protected List producers_;
-	protected List producers_;
+	protected boolean mappingDone_;
 
 }

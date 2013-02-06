@@ -38,71 +38,59 @@ import ptolemy.kernel.util.NamedObj;
 //// EllipseAttribute
 
 /**
- * <p>
- * This is an attribute that is rendered as an ellipse. Unlike the base class,
- * by default, an ellipse is centered on its origin.
- * </p>
- * 
- * @author Edward A. Lee
- * @version $Id: EllipseAttribute.java,v 1.19.4.1 2007/02/04 01:37:36 cxh Exp $
- * @since Ptolemy II 4.0
- * @Pt.ProposedRating Yellow (eal)
- * @Pt.AcceptedRating Red (cxh)
+ <p>This is an attribute that is rendered as an ellipse.
+ Unlike the base class, by default, an ellipse is centered on its origin.</p>
+ 
+ @author Edward A. Lee
+ @version $Id: EllipseAttribute.java,v 1.19.4.1 2007/02/04 01:37:36 cxh Exp $
+ @since Ptolemy II 4.0
+ @Pt.ProposedRating Yellow (eal)
+ @Pt.AcceptedRating Red (cxh)
  */
 public class EllipseAttribute extends FilledShapeAttribute {
-	/**
-	 * Construct an attribute with the given name contained by the specified
-	 * container. The container argument must not be null, or a
-	 * NullPointerException will be thrown. This attribute will use the
-	 * workspace of the container for synchronization and version counts. If the
-	 * name argument is null, then the name is set to the empty string.
-	 * Increment the version of the workspace.
-	 * 
-	 * @param container
-	 *            The container.
-	 * @param name
-	 *            The name of this attribute.
-	 * @exception IllegalActionException
-	 *                If the attribute is not of an acceptable class for the
-	 *                container, or if the name contains a period.
-	 * @exception NameDuplicationException
-	 *                If the name coincides with an attribute already in the
-	 *                container.
-	 */
-	public EllipseAttribute(NamedObj container, String name)
-			throws IllegalActionException, NameDuplicationException {
-		super(container, name);
+    /** Construct an attribute with the given name contained by the
+     *  specified container. The container argument must not be null, or a
+     *  NullPointerException will be thrown.  This attribute will use the
+     *  workspace of the container for synchronization and version counts.
+     *  If the name argument is null, then the name is set to the empty
+     *  string. Increment the version of the workspace.
+     *  @param container The container.
+     *  @param name The name of this attribute.
+     *  @exception IllegalActionException If the attribute is not of an
+     *   acceptable class for the container, or if the name contains a period.
+     *  @exception NameDuplicationException If the name coincides with
+     *   an attribute already in the container.
+     */
+    public EllipseAttribute(NamedObj container, String name)
+            throws IllegalActionException, NameDuplicationException {
+        super(container, name);
 
-		// NOTE: This used to be calling setExpression(), but the change
-		// does not take effect when the icon is created.
-		centered.setToken("true");
-	}
+        // NOTE: This used to be calling setExpression(), but the change
+        // does not take effect when the icon is created.
+        centered.setToken("true");
+    }
 
-	// /////////////////////////////////////////////////////////////////
-	// // protected methods ////
+    ///////////////////////////////////////////////////////////////////
+    ////                         protected methods                 ////
 
-	/**
-	 * Return a circle.
-	 * 
-	 * @return A Circle.
-	 */
-	protected Shape _getDefaultShape() {
-		return new Ellipse2D.Double(0.0, 0.0, 20.0, 20.0);
-	}
+    /** Return a circle.
+     *  @return A Circle.
+     */
+    protected Shape _getDefaultShape() {
+        return new Ellipse2D.Double(0.0, 0.0, 20.0, 20.0);
+    }
 
-	/**
-	 * Return the a new ellipse given a new width and height.
-	 * 
-	 * @return A new shape.
-	 */
-	protected Shape _newShape() {
-		if (_centeredValue) {
-			double halfWidth = _widthValue * 0.5;
-			double halfHeight = _heightValue * 0.5;
-			return new Ellipse2D.Double(-halfWidth, -halfHeight, _widthValue,
-					_heightValue);
-		} else {
-			return new Ellipse2D.Double(0.0, 0.0, _widthValue, _heightValue);
-		}
-	}
+    /** Return the a new ellipse given a new width and height.
+     *  @return A new shape.
+     */
+    protected Shape _newShape() {
+        if (_centeredValue) {
+            double halfWidth = _widthValue * 0.5;
+            double halfHeight = _heightValue * 0.5;
+            return new Ellipse2D.Double(-halfWidth, -halfHeight, _widthValue,
+                    _heightValue);
+        } else {
+            return new Ellipse2D.Double(0.0, 0.0, _widthValue, _heightValue);
+        }
+    }
 }

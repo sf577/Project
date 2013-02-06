@@ -4,6 +4,7 @@ import java.util.Hashtable;
 import java.util.List;
 
 import lsi.noc.stats.BasicCommunicationLatencyAnalysis;
+import ptolemy.data.DoubleToken;
 import ptolemy.data.IntToken;
 import ptolemy.data.Token;
 import ptolemy.kernel.CompositeEntity;
@@ -51,8 +52,10 @@ public class DynamicMapper extends Attribute {
 		int priority = 1;
 		Token t = new Token();
 		
+		Token delay = new DoubleToken(com.PreComptime);
+		
 		sender.sendPacket(t, x, y, messageID_, totalPacketSize, subPacketSize,
-				com.PreComptime.getToken(), priority);
+				delay, priority);
 		
 		messageID_ ++;
 		
@@ -124,9 +127,10 @@ public class DynamicMapper extends Attribute {
 		**/
 	}
 
-	private void confirmMapping(Lifeline lifeline, Lifeline previousmapping) {
+	/**private void confirmMapping(Lifeline lifeline, Lifeline previousmapping) {
 		lifelinesProducer_.put(lifeline, lifelinesProducer_.get(previousmapping));
 	}
+	**/
 
 	/**
 	 * Maps a single task as communication with it has been requested.
@@ -136,7 +140,7 @@ public class DynamicMapper extends Attribute {
 	 * @throws NameDuplicationException
 	 */
 
-	@SuppressWarnings("unchecked")
+	/**
 	protected void performMapping_(Lifeline newTask)
 			throws IllegalActionException, NameDuplicationException {
 		
@@ -178,7 +182,7 @@ public class DynamicMapper extends Attribute {
 		
 		}
 	}	
-	
+	**/
 
 	protected int xdimension = 0;
 	protected int ydimension = 0;

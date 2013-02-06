@@ -9,6 +9,7 @@ import ptolemy.kernel.CompositeEntity;
 import ptolemy.kernel.util.Attribute;
 import ptolemy.kernel.util.IllegalActionException;
 import ptolemy.kernel.util.NameDuplicationException;
+import ptolemy.kernel.util.NamedObj;
 
 /**
  * @author Steven
@@ -22,11 +23,11 @@ public class Application extends Attribute {
 	        
 	    }
 
-	    public Application(CompositeEntity container, String name)
+	    public Application(NamedObj container, String name)
 	    throws IllegalActionException, NameDuplicationException {
 	            super(container, name);
 	            
-	            ArrayList<Task> Tasks = new ArrayList<Task>(10);
+	            Tasks = new ArrayList<Task>(10);
 	            for(int i = 0; i == 9; i++){
 	            	Task t = new Task();
 	            	t.applicationid = 1;
@@ -34,9 +35,10 @@ public class Application extends Attribute {
 	            	Tasks.add(t);
 	            }
 	            initial = Tasks.get(0);
-	            setDependancies();
-	            initial.begin();
+	            this.setDependancies();
 	    }
+	            
+
 
 	    private void setDependancies() {
 			
@@ -66,8 +68,11 @@ public class Application extends Attribute {
 			t.addcommunication(Tasks.get(9));
 			Tasks.set(5, t);
 			
+			initial.begin();
+			
 		}
 
 	    Task initial;
 		ArrayList<Task> Tasks;
+        
 }

@@ -90,8 +90,7 @@ public abstract class LifelineMapper extends Attribute {
 		// the receiving node in order to find out the receiver node's address
 		// (only producers have the address x and y coordinates, consumers not)
 		Producer sender = (Producer) lifelinesProducer_.get(sendingLifeline);
-		Producer receiver = (Producer) lifelinesProducer_
-				.get(receivingLifeline);
+		Producer receiver = (Producer) lifelinesProducer_.get(receivingLifeline);
 
 		// Receiving node's address
 		int x = receiver.getAddressX();
@@ -295,16 +294,6 @@ public abstract class LifelineMapper extends Attribute {
 	 */
 	protected abstract void performMapping_() throws IllegalActionException,
 			NameDuplicationException;
-
-	/**
-	 * This mapping algorithm is implemented by dynamic mapping subclasses
-	 * 
-	 * @param recvlifeline
-	 * @throws IllegalActionException
-	 * @throws NameDuplicationException
-	 */
-	protected abstract void checkMapping(Lifeline recvlifeline)
-			throws IllegalActionException, NameDuplicationException;
 
 	/**
 	 * This methods adds a log entry to all registered
