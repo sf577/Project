@@ -32,7 +32,7 @@ public class DynamicMapper extends Attribute {
 	}
 
 	
-	public void sendMessage(Communication com){
+	public void sendMessage(Communication com) throws IllegalActionException, NameDuplicationException{
 		Task source = com.getSource();
 		Task destination = com.getDest();
 		
@@ -42,6 +42,19 @@ public class DynamicMapper extends Attribute {
 		Producer sender = TaskProducer_.get(source);
 		Producer receiver = TaskProducer_.get(destination);
 		
+		int x = receiver.getAddressX();
+		int y = receiver.getAddressY();
+		
+		int totalPacketSize = com.TotalPacketSize;
+		int subPacketSize = com.SubPacketSize;
+		
+		int priority = 1;
+		Token t = new Token();
+		
+		sender.sendPacket(t, x, y, messageID_, totalPacketSize, subPacketSize,
+				com.PreComptime.getToken(), priority);
+		
+		messageID_ ++;
 		
 	}
 	/**@Override
@@ -91,7 +104,7 @@ public class DynamicMapper extends Attribute {
 	 * existence in the lifelineproducers_ hash table if the lifeline hasn't
 	 * been mapped then perform mapping is called
 	 */
-	protected void checkMapping(Task newTask) {
+	protected void checkMapping(Task newTask) throws IllegalActionException, NameDuplicationException {
 		/**
 		// if the receiving lifeline has not been mapped then perform the
 		// mapping of that lifeline
@@ -172,6 +185,7 @@ public class DynamicMapper extends Attribute {
 	protected int lastx = 0;
 	protected int lasty = 0;
 	protected List<Producer> producers_;
+	protected int messageID_;
 	
 	protected Hashtable<Task, Producer> TaskProducer_ = new Hashtable<Task, Producer>();
 }

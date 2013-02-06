@@ -1,4 +1,7 @@
 package lsi.noc.application;
+
+import ptolemy.data.expr.Parameter;
+
 /**
  * 
  * @author Steven Fisher
@@ -39,5 +42,5 @@ public class Communication {
 	Task DestTask;
 	int TotalPacketSize;
 	int SubPacketSize;
-	double PreComptime;
+	Parameter PreComptime;
 }

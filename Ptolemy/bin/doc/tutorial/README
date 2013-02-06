@@ -1,6 +1,0 @@
-$PTII/doc/tutorial
-Version: $Id: README,v 1.3 2001/01/25 19:24:56 cxh Exp $
-
-This directory contains sample code that is discussed in the
-Building Models chapter of the Ptolemy II design doc located in
-$PTII/doc/design
