@@ -1,46 +1,29 @@
-/**
- * 
- */
 package lsi.noc.application;
 
 import java.util.ArrayList;
 
-import ptolemy.kernel.CompositeEntity;
-import ptolemy.kernel.util.Attribute;
-import ptolemy.kernel.util.IllegalActionException;
-import ptolemy.kernel.util.NameDuplicationException;
 
 /**
  * @author Steven
  *
  */
 @SuppressWarnings("serial")
-public class Task extends Attribute {
+public class Task {
 	
 	public Task(){
-        super();
-        
-    }
-
-    public Task(CompositeEntity container, String name)
-    throws IllegalActionException, NameDuplicationException {
-            super(container, name);
-            
-            CommunicatesWith = new ArrayList<Task>(10);
-            
+        CommunicatesWith = new ArrayList<Task>();
     }
 
 	public void addcommunication(Task t) {
-		
 		CommunicatesWith.add(t);
-		
 	}
 
 
 	public void begin() {
+		System.out.println("Task begun");
 		for(int i=0; i < CommunicatesWith.size(); i++){
 			Communication c = new Communication();
-			c.setParameters(this, CommunicatesWith.get(i), 128, 128, 240);
+			c.setParameters(this, CommunicatesWith.get(i), 128, 128, 1600.0);
 			DynamicMapper.sendMessage(c);
 		}
 		

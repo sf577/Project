@@ -1,6 +1,8 @@
 package lsi.noc.application;
 
 import java.util.ArrayList;
+
+import ptolemy.actor.TypedIOPort;
 import ptolemy.kernel.ComponentEntity;
 import ptolemy.kernel.util.Attribute;
 import ptolemy.kernel.util.IllegalActionException;
@@ -16,26 +18,19 @@ public class Application extends Attribute {
 	    public Application(ComponentEntity container, String name)
 	    throws IllegalActionException, NameDuplicationException {
 	            super(container, name);
-	    }
 	            
-
-	    public void fire(){
-	    	System.out.println("Fired");
-	    	Tasks = new ArrayList<Task>(10);
-            for(int i = 0; i == 9; i++){
-            	Task t = new Task();
-            	t.applicationid = 1;
-            	t.Id = i;
-            	Tasks.add(t);
-            }
-            initial = Tasks.get(0);
-            this.setDependancies();
+		    	Tasks = new ArrayList<Task>();
+	            for(int i = 0; i < 10; i++){
+	            	Task t = new Task();
+	            	t.applicationid = 1;
+	            	t.Id = i;
+	            	Tasks.add(t);
+	            }
+	            initial = Tasks.get(0);
+	            this.setDependancies();
 	    }
 	    
 	    private void setDependancies() {
-	    	
-
-			
 			initial.addcommunication(Tasks.get(1));
 			initial.addcommunication(Tasks.get(2));
 			Tasks.set(0, initial);
@@ -62,7 +57,10 @@ public class Application extends Attribute {
 			t.addcommunication(Tasks.get(9));
 			Tasks.set(5, t);
 			
-			initial.begin();
+		}
+	    
+	    public void fire() {
+				initial.begin();
 			
 		}
 

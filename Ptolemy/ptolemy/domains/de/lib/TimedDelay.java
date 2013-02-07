@@ -27,6 +27,7 @@
  */
 package ptolemy.domains.de.lib;
 
+import lsi.noc.application.Application;
 import ptolemy.actor.util.CalendarQueue;
 import ptolemy.actor.util.Time;
 import ptolemy.actor.util.TimedEvent;
@@ -82,6 +83,7 @@ import ptolemy.kernel.util.Workspace;
  * @Pt.ProposedRating Green (hyzheng)
  * @Pt.AcceptedRating Yellow (hyzheng)
  */
+@SuppressWarnings("serial")
 public class TimedDelay extends DETransformer {
 	/**
 	 * Construct an actor with the specified container and name. Constrain that
