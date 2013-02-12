@@ -2,11 +2,11 @@ package lsi.noc.application;
 
 import java.util.ArrayList;
 
-import ptolemy.actor.TypedIOPort;
 import ptolemy.kernel.ComponentEntity;
 import ptolemy.kernel.util.Attribute;
 import ptolemy.kernel.util.IllegalActionException;
 import ptolemy.kernel.util.NameDuplicationException;
+import ptolemy.kernel.util.NamedObj;
 
 /**
  * @author Steven
@@ -18,12 +18,13 @@ public class Application extends Attribute {
 	    public Application(ComponentEntity container, String name)
 	    throws IllegalActionException, NameDuplicationException {
 	            super(container, name);
-	            
+	            _mapper = (DynamicMapper)getMapper(); 
 		    	Tasks = new ArrayList<Task>();
 	            for(int i = 0; i < 10; i++){
 	            	Task t = new Task();
 	            	t.applicationid = 1;
 	            	t.Id = i;
+	            	t.addMapper(_mapper);
 	            	Tasks.add(t);
 	            }
 	            initial = Tasks.get(0);
@@ -59,12 +60,21 @@ public class Application extends Attribute {
 			
 		}
 	    
-	    public void fire() {
+	    public void begin() throws IllegalActionException, NameDuplicationException {
 				initial.begin();
 			
 		}
+	    
+	    protected Attribute getMapper() throws IllegalActionException,
+		NameDuplicationException {
 
+	    	NamedObj container = getContainer();
+	    	return container.getAttribute("DynamicMapper");
+
+	    }
+	    
 	    Task initial;
+	    DynamicMapper _mapper;
 		ArrayList<Task> Tasks;
         
 }
