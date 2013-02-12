@@ -130,7 +130,7 @@ public class DynamicMapper extends Attribute {
 	}	
 	
 	public void notifyMessageReceipt(int id, double sendTime, Time time, double latency)
-			throws IllegalActionException {
+			throws IllegalActionException, NameDuplicationException {
 
 		// Getting the message due to the id from the consumer
 		Communication c = MessagesIds_.get(new Integer(id));
