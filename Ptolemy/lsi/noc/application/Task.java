@@ -2,21 +2,23 @@ package lsi.noc.application;
 
 import java.util.ArrayList;
 
-import ptolemy.kernel.util.Attribute;
 import ptolemy.kernel.util.IllegalActionException;
 import ptolemy.kernel.util.NameDuplicationException;
-import ptolemy.kernel.util.NamedObj;
 
 
 /**
  * @author Steven
  *
  */
-@SuppressWarnings("serial")
+
 public class Task{
 	
-	public Task() throws IllegalActionException, NameDuplicationException{
+	public Task(int id, int appid, double Computationtime, int Packetsize) throws IllegalActionException, NameDuplicationException{
         CommunicatesWith = new ArrayList<Task>();
+        Id = id;
+        applicationid = appid;
+        delay = Computationtime;
+        packetsize = Packetsize;
     }
 
 	public void addcommunication(Task t) {
@@ -25,13 +27,13 @@ public class Task{
 
 
 	public void begin() throws IllegalActionException, NameDuplicationException {
-		System.out.println("Task begun");
+		
 		for(int i=0; i < CommunicatesWith.size(); i++){
 			Communication c = new Communication();
-			c.setParameters(this, CommunicatesWith.get(i), 128, 128, 1600.0);
+			c.setParameters(this, CommunicatesWith.get(i), packetsize, packetsize, delay);
 			_mapper.sendMessage(c);
 		}
-		
+		_mapper.Unmap(this);
 	}
 
 	public void addMapper(DynamicMapper mapper) {
@@ -40,6 +42,8 @@ public class Task{
 
 	int Id;
 	int applicationid;
+	double delay;
+	int packetsize;
 	ArrayList<Task> CommunicatesWith;
 	DynamicMapper _mapper;
 	

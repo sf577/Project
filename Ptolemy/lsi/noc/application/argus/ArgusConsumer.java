@@ -118,8 +118,13 @@ public class ArgusConsumer extends Consumer {
 
 					if (last) {
 
-						mapper_.notifyMessageReceipt(id_, sendTime,
-								currentTime_, compDelay);
+						try {
+							mapper_.notifyMessageReceipt(id_, sendTime,
+									currentTime_, compDelay);
+						} catch (NameDuplicationException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
 
 						if (_debugging)
 							_debug("payload received: " + tmp + " TIME: "

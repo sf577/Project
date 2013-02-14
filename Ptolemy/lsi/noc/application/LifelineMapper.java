@@ -154,7 +154,8 @@ public abstract class LifelineMapper extends Attribute {
 
 	public void notifyMessageReceipt(int id, double sendTime, Time time)
 			throws IllegalActionException {
-
+		
+		System.out.println("Message Recieved");
 		// Getting the message due to the id from the consumer
 		Message m = (Message) messagesIDs_.get(new Integer(id));
 

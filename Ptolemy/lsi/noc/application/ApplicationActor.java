@@ -44,6 +44,12 @@ public class ApplicationActor extends TypedAtomicActor {
 		}
 	}
 	
+	public boolean postfire() throws IllegalActionException{
+		Time timeToStart = getDirector().getModelTime().add(10000.0);
+		getDirector().fireAt(this, timeToStart);
+		return true;
+	}
+	
 	protected Attribute getApplication() throws IllegalActionException,
 	NameDuplicationException {
 

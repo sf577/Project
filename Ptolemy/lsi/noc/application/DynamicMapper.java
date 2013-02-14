@@ -4,6 +4,7 @@ import java.util.Hashtable;
 import java.util.List;
 import ptolemy.actor.util.Time;
 import ptolemy.data.DoubleToken;
+import ptolemy.data.IntToken;
 import ptolemy.data.Token;
 import ptolemy.kernel.CompositeEntity;
 import ptolemy.kernel.util.Attribute;
@@ -53,13 +54,14 @@ public class DynamicMapper extends Attribute {
 		int subPacketSize = com.SubPacketSize;
 		
 		int priority = 1;
-		Token t = new Token();
+		Token t = new IntToken();
 		
 		Token delay = new DoubleToken(com.PreComptime);
 		
 		sender.sendPacket(t, x, y, messageID_, totalPacketSize, subPacketSize,
 				delay, priority);
 		
+		MessagesIds_.put(messageID_, com);
 		messageID_ ++;
 		
 	}
@@ -73,7 +75,7 @@ public class DynamicMapper extends Attribute {
 		
 		// if the receiving task has not been mapped then perform the
 		// mapping of that task
-			if (!(TaskProducer_.contains(newTask))) {
+			if (!(TaskProducer_.containsKey(newTask))) {
 				performMapping_(newTask);
 			}
 		}
@@ -114,8 +116,8 @@ public class DynamicMapper extends Attribute {
 					if (px == x && py == y){
 						//check if producer is mapped							
 						if(!(TaskProducer_.containsValue(p))){
-							System.out.println("Map to " + x + "," + y);
-							//map
+							System.out.println("Map Task "+ newTask.applicationid +","+ newTask.Id +" to " + x + "," + y);
+
 							TaskProducer_.put(newTask, p);
 							mapped = true;
 						}
@@ -161,6 +163,11 @@ public class DynamicMapper extends Attribute {
 		Nameable container = getContainer();
 		return ((CompositeEntity) container).entityList(Producer.class);
 
+	}
+	
+	public void Unmap(Task t){
+		System.out.println("Remove Task "+ t.applicationid + ", "+ t.Id);
+		TaskProducer_.remove(t);
 	}
 	
 

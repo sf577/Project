@@ -12,22 +12,22 @@
         <property name="_location" class="ptolemy.kernel.util.Location" value="[142.5, 15.0]">
         </property>
     </property>
-    <property name="_windowProperties" class="ptolemy.actor.gui.WindowPropertiesAttribute" value="{bounds={-8, -8, 1696, 1026}, maximized=true}">
+    <property name="_windowProperties" class="ptolemy.actor.gui.WindowPropertiesAttribute" value="{bounds={-9, -9, 1698, 1020}, maximized=true}">
     </property>
-    <property name="_vergilSize" class="ptolemy.actor.gui.SizeAttribute" value="[1473, 910]">
+    <property name="_vergilSize" class="ptolemy.actor.gui.SizeAttribute" value="[1473, 892]">
     </property>
     <property name="_vergilZoomFactor" class="ptolemy.data.expr.ExpertParameter" value="0.7091887679306">
     </property>
-    <property name="_vergilCenter" class="ptolemy.data.expr.ExpertParameter" value="{566.348606418919, 348.9826858108108}">
+    <property name="_vergilCenter" class="ptolemy.data.expr.ExpertParameter" value="{979.0470861486485, 600.4119510135135}">
     </property>
-    <property name="LifelineMapper" class="lsi.noc.application.DynamicMapper">
+    <property name="DynamicMapper" class="lsi.noc.application.DynamicMapper">
         <property name="lifelines" class="ptolemy.data.expr.StringParameter" value="MC,ODB,DC,SI,TPC,PHG,IMP,FB1,FB2,RI">
         </property>
-        <property name="_location" class="ptolemy.kernel.util.Location" value="[150.0, 280.0]">
+        <property name="_location" class="ptolemy.kernel.util.Location" value="[110.0, 245.0]">
         </property>
     </property>
     <property name="Application" class="lsi.noc.application.Application">
-        <property name="_location" class="ptolemy.kernel.util.Location" value="[150.0, 350.0]">
+        <property name="_location" class="ptolemy.kernel.util.Location" value="[10.0, 265.0]">
         </property>
     </property>
     <class name="TimedDelay" extends="ptolemy.domains.de.lib.TimedDelay">
@@ -14839,6 +14839,13 @@
     <entity name="ArgusConsumer16" class="lsi.noc.application.argus.ArgusConsumer">
         <property name="_location" class="ptolemy.kernel.util.Location" value="[1357.5, 25.0]">
         </property>
+    </entity>
+    <entity name="ApplicationActor" class="lsi.noc.application.ApplicationActor">
+        <property name="_location" class="ptolemy.kernel.util.Location" value="[70.0, 335.0]">
+        </property>
+        <port name="Input" class="ptolemy.actor.TypedIOPort">
+            <property name="input"/>
+        </port>
     </entity>
     <relation name="relation0" class="ptolemy.actor.TypedIORelation">
         <property name="width" class="ptolemy.data.expr.Parameter" value="1">

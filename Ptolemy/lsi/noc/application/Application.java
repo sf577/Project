@@ -20,13 +20,47 @@ public class Application extends Attribute {
 	            super(container, name);
 	            _mapper = (DynamicMapper)getMapper(); 
 		    	Tasks = new ArrayList<Task>();
-	            for(int i = 0; i < 10; i++){
-	            	Task t = new Task();
-	            	t.applicationid = 1;
-	            	t.Id = i;
+	            	
+		    		Task t = new Task(0, 1, 1200.0, 128);
 	            	t.addMapper(_mapper);
 	            	Tasks.add(t);
-	            }
+	            
+	            	t = new Task(1, 1, 1600.0, 256);
+	            	t.addMapper(_mapper);
+	            	Tasks.add(t);
+	            	
+	            	t = new Task(2, 1, 800.0, 128);
+	            	t.addMapper(_mapper);
+	            	Tasks.add(t);
+	            	
+	            	t = new Task(3, 1, 1200.0, 512);
+	            	t.addMapper(_mapper);
+	            	Tasks.add(t);
+	            	
+	            	t = new Task(4, 1, 2000.0, 128);
+	            	t.addMapper(_mapper);
+	            	Tasks.add(t);
+	            	
+	            	t = new Task(5, 1, 2400.0, 1024);
+	            	t.addMapper(_mapper);
+	            	Tasks.add(t);
+	            	
+	            	t = new Task(6, 1, 600.0, 512);
+	            	t.addMapper(_mapper);
+	            	Tasks.add(t);
+	            	
+	            	t = new Task(7, 1, 1200.0, 128);
+	            	t.addMapper(_mapper);
+	            	Tasks.add(t);
+	            	
+	            	t = new Task(8, 1, 1500.0, 512);
+	            	t.addMapper(_mapper);
+	            	Tasks.add(t);
+	            	
+	            	t = new Task(9, 1, 2400.0, 1024);
+	            	t.addMapper(_mapper);
+	            	Tasks.add(t);
+	            
 	            initial = Tasks.get(0);
 	            this.setDependancies();
 	    }
