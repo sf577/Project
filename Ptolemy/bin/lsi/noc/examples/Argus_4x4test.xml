@@ -18,7 +18,7 @@
     </property>
     <property name="_vergilZoomFactor" class="ptolemy.data.expr.ExpertParameter" value="0.7091887679306">
     </property>
-    <property name="_vergilCenter" class="ptolemy.data.expr.ExpertParameter" value="{979.0470861486485, 600.4119510135135}">
+    <property name="_vergilCenter" class="ptolemy.data.expr.ExpertParameter" value="{912.0713682432433, 136.6475929054054}">
     </property>
     <property name="DynamicMapper" class="lsi.noc.application.DynamicMapper">
         <property name="lifelines" class="ptolemy.data.expr.StringParameter" value="MC,ODB,DC,SI,TPC,PHG,IMP,FB1,FB2,RI">
@@ -27,7 +27,7 @@
         </property>
     </property>
     <property name="Application" class="lsi.noc.application.Application">
-        <property name="_location" class="ptolemy.kernel.util.Location" value="[10.0, 265.0]">
+        <property name="_location" class="ptolemy.kernel.util.Location" value="[460.0, -260.0]">
         </property>
     </property>
     <class name="TimedDelay" extends="ptolemy.domains.de.lib.TimedDelay">
@@ -14841,7 +14841,7 @@
         </property>
     </entity>
     <entity name="ApplicationActor" class="lsi.noc.application.ApplicationActor">
-        <property name="_location" class="ptolemy.kernel.util.Location" value="[70.0, 335.0]">
+        <property name="_location" class="ptolemy.kernel.util.Location" value="[570.0, -260.0]">
         </property>
         <port name="Input" class="ptolemy.actor.TypedIOPort">
             <property name="input"/>

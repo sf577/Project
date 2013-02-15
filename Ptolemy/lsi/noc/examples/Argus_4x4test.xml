@@ -27,7 +27,15 @@
         </property>
     </property>
     <property name="Application" class="lsi.noc.application.Application">
-        <property name="_location" class="ptolemy.kernel.util.Location" value="[460.0, -260.0]">
+        <property name="_location" class="ptolemy.kernel.util.Location" value="[445.0, -140.0]">
+        </property>
+    </property>
+    <property name="Application2" class="lsi.noc.application.Application2">
+        <property name="_location" class="ptolemy.kernel.util.Location" value="[710.0, -140.0]">
+        </property>
+    </property>
+    <property name="Application3" class="lsi.noc.application.Application3">
+        <property name="_location" class="ptolemy.kernel.util.Location" value="[970.0, -145.0]">
         </property>
     </property>
     <class name="TimedDelay" extends="ptolemy.domains.de.lib.TimedDelay">
@@ -14841,11 +14849,19 @@
         </property>
     </entity>
     <entity name="ApplicationActor" class="lsi.noc.application.ApplicationActor">
-        <property name="_location" class="ptolemy.kernel.util.Location" value="[570.0, -260.0]">
+        <property name="_location" class="ptolemy.kernel.util.Location" value="[555.0, -140.0]">
         </property>
         <port name="Input" class="ptolemy.actor.TypedIOPort">
             <property name="input"/>
         </port>
+    </entity>
+    <entity name="Application2Actor" class="lsi.noc.application.Application2Actor">
+        <property name="_location" class="ptolemy.kernel.util.Location" value="[800.0, -140.0]">
+        </property>
+    </entity>
+    <entity name="Application3Actor" class="lsi.noc.application.Application3Actor">
+        <property name="_location" class="ptolemy.kernel.util.Location" value="[1065.0, -145.0]">
+        </property>
     </entity>
     <relation name="relation0" class="ptolemy.actor.TypedIORelation">
         <property name="width" class="ptolemy.data.expr.Parameter" value="1">

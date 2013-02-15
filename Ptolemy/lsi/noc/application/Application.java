@@ -86,7 +86,7 @@ public class Application extends Attribute {
 			
 			t = Tasks.get(4);
 			t.addcommunication(Tasks.get(8));
-			Tasks.set(5, t);
+			Tasks.set(4, t);
 			
 			t = Tasks.get(5);
 			t.addcommunication(Tasks.get(9));
