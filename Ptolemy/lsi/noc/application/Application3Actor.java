@@ -46,7 +46,7 @@ import ptolemy.kernel.util.Workspace;
 			}
 			
 			public boolean postfire() throws IllegalActionException{
-				Time timeToStart = getDirector().getModelTime().add(10000.0);
+				Time timeToStart = getDirector().getModelTime().add(6000.0);
 				getDirector().fireAt(this, timeToStart);
 				return true;
 			}

@@ -76,7 +76,7 @@ public class DynamicMapper extends Attribute {
 		// if the receiving task has not been mapped then perform the
 		// mapping of that task
 			if (!(TaskProducer_.containsKey(newTask))) {
-				performMapping_(newTask);
+				performMapping_FF(newTask);
 			}
 		}
 
@@ -89,7 +89,7 @@ public class DynamicMapper extends Attribute {
 	 * @throws IllegalActionException
 	 * @throws NameDuplicationException
 	 */
-	protected void performMapping_(Task newTask)
+	protected void performMapping_FF(Task newTask)
 			throws IllegalActionException, NameDuplicationException {
 		
 		boolean mapped = false;
@@ -149,11 +149,11 @@ public class DynamicMapper extends Attribute {
 
 
 		// Writing the messages receive time to a file
-		// write(time.getDoubleValue(), false, false, m, id);
+		 //write(time.getDoubleValue(), false, false, m, id);
 
 		// Writing the message's communication delay caused by the network
-		// Time time2 = time.subtract(sendTime);
-		// write(time2.getDoubleValue(), true, false, m, id);
+		 //Time time2 = time.subtract(sendTime);
+		 //write(time2.getDoubleValue(), true, false, m, id);
 
 	}
 	
@@ -166,7 +166,7 @@ public class DynamicMapper extends Attribute {
 	}
 	
 	public void Unmap(Task t){
-		System.out.println("Remove Task "+ t.applicationid + ", "+ t.Id);
+		//System.out.println("Remove Task "+ t.applicationid + ", "+ t.Id);
 		TaskProducer_.remove(t);
 	}
 	
