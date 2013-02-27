@@ -35,7 +35,6 @@ public class ApplicationActor extends TypedAtomicActor {
 	}
 
 	public void fire() throws IllegalActionException{
-		System.out.println("fired");
 		try {
 			_application.begin();
 		} catch (NameDuplicationException e) {

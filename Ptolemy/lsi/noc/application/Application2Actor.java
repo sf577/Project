@@ -36,7 +36,6 @@ import ptolemy.kernel.util.Workspace;
 			}
 
 			public void fire() throws IllegalActionException{
-				System.out.println("fired");
 				try {
 					_application.begin();
 				} catch (NameDuplicationException e) {
