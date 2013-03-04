@@ -51,7 +51,7 @@ public class DynamicMapperNN extends DynamicMapper {
 	 * @throws IllegalActionException
 	 * @throws NameDuplicationException
 	 */
-	protected void performMapping_NN(Task newTask, Task Source)
+	protected void performMapping(Task newTask, Task Source)
 			throws IllegalActionException, NameDuplicationException {
 		
 		int sourcex;
@@ -100,7 +100,7 @@ public class DynamicMapperNN extends DynamicMapper {
 		// if the receiving task has not been mapped then perform the
 		// mapping of that task
 			if (!(TaskProducer_.containsKey(newTask))) {
-				performMapping_NN(newTask, Source);
+				performMapping(newTask, Source);
 			}
 		}
 

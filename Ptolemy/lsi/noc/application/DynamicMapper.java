@@ -76,7 +76,7 @@ public class DynamicMapper extends Attribute {
 		// if the receiving task has not been mapped then perform the
 		// mapping of that task
 			if (!(TaskProducer_.containsKey(newTask))) {
-				performMapping_FF(newTask);
+				performMapping(newTask);
 			}
 		}
 
@@ -89,7 +89,7 @@ public class DynamicMapper extends Attribute {
 	 * @throws IllegalActionException
 	 * @throws NameDuplicationException
 	 */
-	protected void performMapping_FF(Task newTask)
+	protected void performMapping(Task newTask)
 			throws IllegalActionException, NameDuplicationException {
 		
 		boolean mapped = false;
@@ -97,13 +97,7 @@ public class DynamicMapper extends Attribute {
 		producers_ = getproducers_();
 		int amountOfProducers = producers_.size();
 
-		// Goes through the list of producers and checks their positions on the
-		// mesh to find out the NoC dimensions
-		xdimension = 3;
-		ydimension = 3;
-			
-		//traverse list in xy format
-		
+		//traverse list in xy format		
 		int y = 0;
 		while (y <= ydimension && !mapped) {
 			int x = 0;
@@ -171,10 +165,8 @@ public class DynamicMapper extends Attribute {
 	}
 	
 
-	protected int xdimension = 0;
-	protected int ydimension = 0;
-	protected int lastx = 0;
-	protected int lasty = 0;
+	protected int xdimension = 3;
+	protected int ydimension = 3;
 	@SuppressWarnings("rawtypes")
 	protected List producers_;
 	protected int messageID_;
