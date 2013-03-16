@@ -13,6 +13,7 @@ public class DynamicMapperNN extends DynamicMapper {
 	public DynamicMapperNN(CompositeEntity container, String name)
 			throws IllegalActionException, NameDuplicationException {
 		super(container, name);
+		lastassignedcluster = 0;
 	}
 	
 	public void sendMessage(Communication com) throws IllegalActionException, NameDuplicationException{
@@ -54,8 +55,8 @@ public class DynamicMapperNN extends DynamicMapper {
 	protected void performMapping(Task newTask, Task Source)
 			throws IllegalActionException, NameDuplicationException {
 		
-		int sourcex;
-		int sourcey;
+		int sourcex = 0;
+		int sourcey = 0;
 		
 		if (!(Source == null)){
 			Producer SourceP = TaskProducer_.get(Source);
@@ -63,8 +64,24 @@ public class DynamicMapperNN extends DynamicMapper {
 			sourcey = SourceP.getAddressY();
 			
 		} else {
-			sourcex = newTask.applicationid;
-			sourcey = newTask.applicationid;
+			switch (lastassignedcluster){
+			case 0: sourcex = 0;
+					sourcey = ydimension;
+					lastassignedcluster = 1;
+					break;
+			case 1: sourcex = xdimension;
+					sourcey = ydimension;
+					lastassignedcluster = 2;
+					break;
+			case 2: sourcex = xdimension;
+					sourcey = 0;
+					lastassignedcluster = 3;
+					break;
+			case 3: sourcex = 0;
+					sourcey = 0;
+					lastassignedcluster = 0;
+					break;
+			}
 		}
 		
 		boolean mapped = false;
@@ -72,7 +89,7 @@ public class DynamicMapperNN extends DynamicMapper {
 		producers_ = getproducers_();
 		int amountOfProducers = producers_.size();
 		while (!mapped){
-			for (int hopdistance = 1; hopdistance <= 6 && !mapped; hopdistance ++)	
+			for (int hopdistance = 0; hopdistance <= 6 && !mapped; hopdistance ++)	
 				for (int i = 0; i < amountOfProducers && !mapped; i++) {
 					Producer p = (Producer) producers_.get(i);
 					int px = p.getAddressX();
@@ -104,4 +121,5 @@ public class DynamicMapperNN extends DynamicMapper {
 			}
 		}
 
+	int lastassignedcluster;
 }

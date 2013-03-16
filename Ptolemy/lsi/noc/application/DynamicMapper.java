@@ -2,6 +2,7 @@ package lsi.noc.application;
 
 import java.util.Hashtable;
 import java.util.List;
+
 import ptolemy.actor.util.Time;
 import ptolemy.data.DoubleToken;
 import ptolemy.data.IntToken;
@@ -79,8 +80,6 @@ public class DynamicMapper extends Attribute {
 				performMapping(newTask);
 			}
 		}
-
-	
 	
 	/**
 	 * Maps a single task as communication with it has been requested.
@@ -103,15 +102,12 @@ public class DynamicMapper extends Attribute {
 			int x = 0;
 			while (x <= xdimension && !mapped){
 				for (int i = 0; i < amountOfProducers; i++) {
-					
 					Producer p = (Producer) producers_.get(i);
 					int px = p.getAddressX();
 					int py = p.getAddressY();
 					if (px == x && py == y){
 						//check if producer is mapped							
 						if(!(TaskProducer_.containsValue(p))){
-							System.out.println("Map Task "+ newTask.applicationid +","+ newTask.Id +" to " + x + "," + y);
-
 							TaskProducer_.put(newTask, p);
 							mapped = true;
 						}
@@ -136,24 +132,15 @@ public class DynamicMapper extends Attribute {
 
 		// Getting the task that "receives" the message
 		Task destination = c.getDest();
-		
 		destination.begin();
-
-		// logging the receipt time and latency
-
-
-		// Writing the messages receive time to a file
-		 //write(time.getDoubleValue(), false, false, m, id);
-
-		// Writing the message's communication delay caused by the network
-		 //Time time2 = time.subtract(sendTime);
-		 //write(time2.getDoubleValue(), true, false, m, id);
+		
+		// Writing the messages receive time  and latency to a file
+		 write(c,time.getDoubleValue(), time.subtract(sendTime).getDoubleValue());
 
 	}
 	
-	@SuppressWarnings("rawtypes")
-	protected List getproducers_() throws IllegalActionException, NameDuplicationException {
-
+	@SuppressWarnings({ "unchecked" })
+	protected List<Producer> getproducers_() throws IllegalActionException, NameDuplicationException {
 		Nameable container = getContainer();
 		return ((CompositeEntity) container).entityList(Producer.class);
 
@@ -164,11 +151,17 @@ public class DynamicMapper extends Attribute {
 		TaskProducer_.remove(t);
 	}
 	
+	private void write(Communication com, Double time, Double latency) {
+
+		String info = com.SourceTask.applicationid + "," + com.SourceTask.Id + "-"
+				+ com.DestTask.applicationid + "," + com.DestTask.Id;
+		System.out.println(info + " " + time + " " + latency);
+	
+	}
 
 	protected int xdimension = 3;
 	protected int ydimension = 3;
-	@SuppressWarnings("rawtypes")
-	protected List producers_;
+	protected List<Producer> producers_;
 	protected int messageID_;
 	protected Hashtable<Task, Producer> TaskProducer_ = new Hashtable<Task, Producer>();
 	protected Hashtable<Integer, Communication> MessagesIds_ = new Hashtable<Integer, Communication>();
