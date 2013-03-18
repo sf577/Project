@@ -1,6 +1,7 @@
 package lsi.noc.application;
 
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.List;
 
 import ptolemy.kernel.CompositeEntity;
@@ -27,22 +28,27 @@ public class PNNDynamicMapper extends DynamicMapperNN {
 			sourcey = SourceP.getAddressY();
 			
 		} else {
+			applicationClusters.remove(newTask.applicationid);
 			switch (lastassignedcluster){
 			case 0: sourcex = 0;
 					sourcey = ydimension;
 					lastassignedcluster = 1;
+					applicationClusters.put(newTask.applicationid, 1);
 					break;
 			case 1: sourcex = xdimension;
 					sourcey = ydimension;
 					lastassignedcluster = 2;
+					applicationClusters.put(newTask.applicationid, 2);
 					break;
 			case 2: sourcex = xdimension;
 					sourcey = 0;
 					lastassignedcluster = 3;
+					applicationClusters.put(newTask.applicationid, 3);
 					break;
 			case 3: sourcex = 0;
 					sourcey = 0;
 					lastassignedcluster = 0;
+					applicationClusters.put(newTask.applicationid, 0);
 					break;
 			}
 		}
@@ -52,7 +58,7 @@ public class PNNDynamicMapper extends DynamicMapperNN {
 		producers_ = getproducers_();
 		int amountOfProducers = producers_.size();
 		while (!mapped){
-			for (int hopdistance = 0; hopdistance <= 6 && !mapped; hopdistance ++)	
+			for (int hopdistance = 0; hopdistance <= 6 && !mapped; hopdistance ++){	
 				for (int i = 0; i < amountOfProducers; i++) {
 					Producer p = (Producer) producers_.get(i);
 					int px = p.getAddressX();
@@ -66,16 +72,10 @@ public class PNNDynamicMapper extends DynamicMapperNN {
 					}
 				}
 				if (!(possiblemappings.isEmpty())){
-					int minx = 3;
-					int miny = 3;
+					int minhopdistance = xdimension + ydimension;
 					int mapping = 0;
 					for (int i = 0; i < possiblemappings.size(); i++) {
-						Producer p = possiblemappings.get(i);
-						int px = p.getAddressX();
-						int py = p.getAddressY();
-						if ((px + py) < (minx + miny)){
-							minx = px;
-							miny = py;
+						if(hopdistanceFromClusterCorner(possiblemappings.get(i), newTask.applicationid) < minhopdistance){
 							mapping = i;
 						}
 					}
@@ -84,5 +84,30 @@ public class PNNDynamicMapper extends DynamicMapperNN {
 					mapped = true;
 				}
 			}
+	}
+}
+	
+	protected int hopdistanceFromClusterCorner(Producer PE, int Appid) throws IllegalActionException{
+		int cluster = applicationClusters.get(Appid);
+		int x = 0,y = 0;
+		switch(cluster){
+			case 0: x = 0;
+					y = 0;
+					break;
+			case 1: x = 0;
+					y = ydimension;
+					break;
+			case 2: x = xdimension;
+					y = ydimension;
+					break;
+			case 3: x = xdimension;
+					y = 0;
+					break;
 		}
-	}	
+		int px = PE.getAddressX();
+		int py = PE.getAddressY();
+		return (Math.abs(px-x) + Math.abs(py - y));
+	}
+	
+	protected Hashtable<Integer, Integer> applicationClusters = new Hashtable<Integer,Integer>();
+}	

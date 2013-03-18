@@ -89,7 +89,7 @@ public class DynamicMapperNN extends DynamicMapper {
 		producers_ = getproducers_();
 		int amountOfProducers = producers_.size();
 		while (!mapped){
-			for (int hopdistance = 0; hopdistance <= 6 && !mapped; hopdistance ++)	
+			for (int hopdistance = 0; hopdistance <= 6 && !mapped; hopdistance ++){
 				for (int i = 0; i < amountOfProducers && !mapped; i++) {
 					Producer p = (Producer) producers_.get(i);
 					int px = p.getAddressX();
@@ -104,6 +104,7 @@ public class DynamicMapperNN extends DynamicMapper {
 					}
 					
 				}
+			}
 		}
 	}	
 	
