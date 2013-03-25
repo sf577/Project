@@ -9,9 +9,9 @@ import ptolemy.kernel.util.IllegalActionException;
 import ptolemy.kernel.util.NameDuplicationException;
 
 @SuppressWarnings("serial")
-public class PNNDynamicMapper extends DynamicMapperNN {
+public class DynamicMapperPNN extends DynamicMapperNN {
 
-	public PNNDynamicMapper(CompositeEntity container, String name)
+	public DynamicMapperPNN(CompositeEntity container, String name)
 			throws IllegalActionException, NameDuplicationException {
 		super(container, name);
 	}
