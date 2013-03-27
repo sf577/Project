@@ -52,12 +52,10 @@ public class DynamicMapperPNN extends DynamicMapperNN {
 					break;
 			}
 		}
-		
 		boolean mapped = false;
 		//get the list of possible producers
 		producers_ = getproducers_();
 		int amountOfProducers = producers_.size();
-		while (!mapped){
 			for (int hopdistance = 0; hopdistance <= 6 && !mapped; hopdistance ++){	
 				for (int i = 0; i < amountOfProducers; i++) {
 					Producer p = (Producer) producers_.get(i);
@@ -85,7 +83,6 @@ public class DynamicMapperPNN extends DynamicMapperNN {
 				}
 			}
 	}
-}
 	
 	protected int hopdistanceFromClusterCorner(Producer PE, int Appid) throws IllegalActionException{
 		int cluster = applicationClusters.get(Appid);

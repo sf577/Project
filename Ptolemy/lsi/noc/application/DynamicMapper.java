@@ -1,7 +1,9 @@
 package lsi.noc.application;
 
 import java.util.Hashtable;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 
 import ptolemy.actor.util.Time;
 import ptolemy.data.DoubleToken;
@@ -39,45 +41,105 @@ public class DynamicMapper extends Attribute {
 	 * @throws NameDuplicationException
 	 */
 	public void sendMessage(Communication com) throws IllegalActionException, NameDuplicationException{
-		Task source = com.getSource();
-		Task destination = com.getDest();
-		
-		this.checkMapping(source);
-		this.checkMapping(destination);
-		
-		Producer sender = TaskProducer_.get(source);
-		Producer receiver = TaskProducer_.get(destination);
-		
-		int x = receiver.getAddressX();
-		int y = receiver.getAddressY();
-		
-		int totalPacketSize = com.TotalPacketSize;
-		int subPacketSize = com.SubPacketSize;
-		
-		int priority = 1;
-		Token t = new IntToken();
-		
-		Token delay = new DoubleToken(com.PreComptime);
-		
-		sender.sendPacket(t, x, y, messageID_, totalPacketSize, subPacketSize,
-				delay, priority);
-		
-		MessagesIds_.put(messageID_, com);
-		messageID_ ++;
-		
+		if (mappingQueue.isEmpty()){
+			Task source = com.getSource();
+			Task destination = com.getDest();
+			
+			boolean mappedSource = this.checkMapping(source);
+			boolean mappedDest = false;
+			boolean stop = false;
+			if (mappedSource == false){
+				stop = true;
+			}
+			if (stop == false){
+				mappedDest = this.checkMapping(destination);
+				if (mappedDest == false){
+					stop = true;
+				}
+			}
+			if (stop == false){
+				Producer sender = TaskProducer_.get(source);
+				Producer receiver = TaskProducer_.get(destination);
+				
+				int x = receiver.getAddressX();
+				int y = receiver.getAddressY();
+				
+				int totalPacketSize = com.TotalPacketSize;
+				int subPacketSize = com.SubPacketSize;
+				
+				int priority = 1;
+				Token t = new IntToken();
+				
+				Token delay = new DoubleToken(com.PreComptime);
+				
+				sender.sendPacket(t, x, y, messageID_, totalPacketSize, subPacketSize,
+						delay, priority);
+				
+				MessagesIds_.put(messageID_, com);
+				messageID_ ++;
+			}
+		} else {
+			mappingQueue.offer(com);
+			Communication head = mappingQueue.poll();
+			sendQueuedMessage(head);
+		}
+			
 	}
-
+	
+	protected void sendQueuedMessage(Communication com) throws IllegalActionException, NameDuplicationException{
+			Task source = com.getSource();
+			Task destination = com.getDest();
+			
+			boolean mappedSource = this.checkMapping(source);
+			boolean mappedDest = false;
+			boolean stop = false;
+			if (mappedSource == false){
+				stop = true;
+			}
+			if (stop == false){
+				mappedDest = this.checkMapping(destination);
+				if (mappedDest == false){
+					stop = true;
+				}
+			}
+			if (stop == false){	
+				Producer sender = TaskProducer_.get(source);
+				Producer receiver = TaskProducer_.get(destination);
+				
+				int x = receiver.getAddressX();
+				int y = receiver.getAddressY();
+				
+				int totalPacketSize = com.TotalPacketSize;
+				int subPacketSize = com.SubPacketSize;
+				
+				int priority = 1;
+				Token t = new IntToken();
+				
+				Token delay = new DoubleToken(com.PreComptime);
+				
+				sender.sendPacket(t, x, y, messageID_, totalPacketSize, subPacketSize,
+						delay, priority);
+				
+				MessagesIds_.put(messageID_, com);
+				messageID_ ++;
+			}
+	}
 	/**
 	 * checks that the receiving task has been mapped by checking for its
 	 * existence in the TaskProducer_ hash table if the task hasn't
 	 * been mapped then perform mapping is called
 	 */
-	protected void checkMapping(Task newTask) throws IllegalActionException, NameDuplicationException {
+	protected boolean checkMapping(Task newTask) throws IllegalActionException, NameDuplicationException {
 		
 		// if the receiving task has not been mapped then perform the
 		// mapping of that task
 			if (!(TaskProducer_.containsKey(newTask))) {
 				performMapping(newTask);
+			}
+			if (!(TaskProducer_.containsKey(newTask))){
+				return false;
+			} else {
+				return true;
 			}
 		}
 	
@@ -131,6 +193,8 @@ public class DynamicMapper extends Attribute {
 		MessagesIds_.remove(new Integer(id));
 
 		// Getting the task that "receives" the message
+		Task Source = c.getSource();
+		Source.messageRecieved();
 		Task destination = c.getDest();
 		destination.begin();
 		
@@ -147,11 +211,11 @@ public class DynamicMapper extends Attribute {
 	}
 	
 	public void Unmap(Task t){
-		//System.out.println("Remove Task "+ t.applicationid + ", "+ t.Id);
+		System.out.println("Remove Task "+ t.applicationid + ", "+ t.Id);
 		TaskProducer_.remove(t);
 	}
 	
-	private void write(Communication com, Double time, Double latency) {
+	protected void write(Communication com, Double time, Double latency) {
 
 		String info = com.SourceTask.applicationid + "," + com.SourceTask.Id + "-"
 				+ com.DestTask.applicationid + "," + com.DestTask.Id;
@@ -163,6 +227,7 @@ public class DynamicMapper extends Attribute {
 	protected int ydimension = 3;
 	protected List<Producer> producers_;
 	protected int messageID_;
+	protected Queue<Communication> mappingQueue = new LinkedList<Communication>();
 	protected Hashtable<Task, Producer> TaskProducer_ = new Hashtable<Task, Producer>();
 	protected Hashtable<Integer, Communication> MessagesIds_ = new Hashtable<Integer, Communication>();
 }

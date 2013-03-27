@@ -17,32 +17,80 @@ public class DynamicMapperNN extends DynamicMapper {
 	}
 	
 	public void sendMessage(Communication com) throws IllegalActionException, NameDuplicationException{
-		Task source = com.getSource();
-		Task destination = com.getDest();
-		
-		this.checkMapping(source, null);
-		this.checkMapping(destination, source);
-		
-		Producer sender = TaskProducer_.get(source);
-		Producer receiver = TaskProducer_.get(destination);
-		
-		int x = receiver.getAddressX();
-		int y = receiver.getAddressY();
-		
-		int totalPacketSize = com.TotalPacketSize;
-		int subPacketSize = com.SubPacketSize;
-		
-		int priority = 1;
-		Token t = new IntToken();
-		
-		Token delay = new DoubleToken(com.PreComptime);
-		
-		sender.sendPacket(t, x, y, messageID_, totalPacketSize, subPacketSize,
-				delay, priority);
-		
-		MessagesIds_.put(messageID_, com);
-		messageID_ ++;
-		
+		if (mappingQueue.isEmpty()){
+			Task source = com.getSource();
+			Task destination = com.getDest();
+			
+			boolean mappedSource = this.checkMapping(source, null);
+			boolean mappedDest = false;
+			boolean stop = false;
+			if (mappedSource == false){
+				stop = true;
+			}
+			if (stop == false){
+				mappedDest = this.checkMapping(destination, source);
+				if (mappedDest == false){
+					stop = true;
+				}
+			}
+			if (stop == false){
+				Producer sender = TaskProducer_.get(source);
+				Producer receiver = TaskProducer_.get(destination);
+				
+				int x = receiver.getAddressX();
+				int y = receiver.getAddressY();
+				
+				int totalPacketSize = com.TotalPacketSize;
+				int subPacketSize = com.SubPacketSize;
+				
+				int priority = 1;
+				Token t = new IntToken();
+				
+				Token delay = new DoubleToken(com.PreComptime);
+				
+				sender.sendPacket(t, x, y, messageID_, totalPacketSize, subPacketSize,
+						delay, priority);
+				
+				MessagesIds_.put(messageID_, com);
+				messageID_ ++;
+			}
+		} else {
+			mappingQueue.offer(com);
+			Communication head = mappingQueue.poll();
+			sendQueuedMessage(head);
+		}
+			
+	}
+	
+	protected void sendQueuedMessage(Communication com) throws IllegalActionException, NameDuplicationException{
+			Task source = com.getSource();
+			Task destination = com.getDest();
+			
+			boolean mappedSource = this.checkMapping(source, null);
+			boolean mappedDest = this.checkMapping(destination, source);
+			if (mappedSource == false || mappedDest == false){
+				mappingQueue.offer(com);
+			} else{		
+				Producer sender = TaskProducer_.get(source);
+				Producer receiver = TaskProducer_.get(destination);
+				
+				int x = receiver.getAddressX();
+				int y = receiver.getAddressY();
+				
+				int totalPacketSize = com.TotalPacketSize;
+				int subPacketSize = com.SubPacketSize;
+				
+				int priority = 1;
+				Token t = new IntToken();
+				
+				Token delay = new DoubleToken(com.PreComptime);
+				
+				sender.sendPacket(t, x, y, messageID_, totalPacketSize, subPacketSize,
+						delay, priority);
+				
+				MessagesIds_.put(messageID_, com);
+				messageID_ ++;
+			}
 	}
 	
 	/**
@@ -88,22 +136,19 @@ public class DynamicMapperNN extends DynamicMapper {
 		//get the list of possible producers
 		producers_ = getproducers_();
 		int amountOfProducers = producers_.size();
-		while (!mapped){
-			for (int hopdistance = 0; hopdistance <= 6 && !mapped; hopdistance ++){
-				for (int i = 0; i < amountOfProducers && !mapped; i++) {
-					Producer p = (Producer) producers_.get(i);
-					int px = p.getAddressX();
-					int py = p.getAddressY();
-					if ((Math.abs(px-sourcex) + Math.abs(py - sourcey)) <= hopdistance){
-						//check if producer is mapped							
-						if(!(TaskProducer_.containsValue(p))){
-							//System.out.println("Map Task "+ newTask.applicationid +","+ newTask.Id +" to " + px + "," + py + " : Hopdistance = "+ Math.abs(((px-sourcex) + (py - sourcey))));
-							TaskProducer_.put(newTask, p);
-							mapped = true;
-						}
+		for (int hopdistance = 0; hopdistance <= 6 && !mapped; hopdistance ++){
+			for (int i = 0; i < amountOfProducers && !mapped; i++) {
+				Producer p = (Producer) producers_.get(i);
+				int px = p.getAddressX();
+				int py = p.getAddressY();
+				if ((Math.abs(px-sourcex) + Math.abs(py - sourcey)) <= hopdistance){
+					//check if producer is mapped							
+					if(!(TaskProducer_.containsValue(p))){
+						//System.out.println("Map Task "+ newTask.applicationid +","+ newTask.Id +" to " + px + "," + py + " : Hopdistance = "+ Math.abs(((px-sourcex) + (py - sourcey))));
+						TaskProducer_.put(newTask, p);
+						mapped = true;
 					}
-					
-				}
+				}				
 			}
 		}
 	}	
@@ -113,12 +158,17 @@ public class DynamicMapperNN extends DynamicMapper {
 	 * existence in the TaskProducer_ hash table if the task hasn't
 	 * been mapped then perform mapping is called
 	 */
-	protected void checkMapping(Task newTask, Task Source) throws IllegalActionException, NameDuplicationException {
+	protected boolean checkMapping(Task newTask, Task Source) throws IllegalActionException, NameDuplicationException {
 		
 		// if the receiving task has not been mapped then perform the
 		// mapping of that task
 			if (!(TaskProducer_.containsKey(newTask))) {
 				performMapping(newTask, Source);
+			}
+			if (!(TaskProducer_.containsKey(newTask))){
+				return false;
+			} else {
+				return true;
 			}
 		}
 
