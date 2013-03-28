@@ -24,5 +24,4 @@ public class DynamicMapperMAC extends DynamicMapperMMC {
 		int average = sum/(VEL.size() + HEL.size());
 		return average;
 	}
-
 }

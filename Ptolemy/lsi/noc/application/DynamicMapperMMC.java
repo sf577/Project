@@ -39,14 +39,14 @@ public class DynamicMapperMMC extends DynamicMapper {
 			Task source = com.getSource();
 			Task destination = com.getDest();
 			
-			boolean mappedSource = this.checkMapping(source);
+			boolean mappedSource = this.checkMapping(source, com);
 			boolean mappedDest = false;
 			boolean stop = false;
 			if (mappedSource == false){
 				stop = true;
 			}
 			if (stop == false){
-				mappedDest = this.checkMapping(destination);
+				mappedDest = this.checkMapping(destination, com);
 				if (mappedDest == false){
 					stop = true;
 				}
@@ -122,9 +122,7 @@ public class DynamicMapperMMC extends DynamicMapper {
 				messageID_ ++;
 			}
 	}
-	
-	
-	
+
 	
 	/**
 	 * checks that the receiving task has been mapped by checking for its
@@ -244,8 +242,8 @@ public class DynamicMapperMMC extends DynamicMapper {
 			edgeweight = edgeweight + com.TotalPacketSize;
 			newVELs.set(edge, edgeweight);
 		}		
-		int Maxcongestion = getCongestion(newHELs, newVELs);
-		return Maxcongestion;
+		int congestion = getCongestion(newHELs, newVELs);
+		return congestion;
 	}
 	
 	public void notifyMessageReceipt(int id, double sendTime, Time time, double latency)
