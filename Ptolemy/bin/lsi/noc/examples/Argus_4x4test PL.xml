@@ -20,7 +20,7 @@
     </property>
     <property name="_vergilCenter" class="ptolemy.data.expr.ExpertParameter" value="{912.0713682432433, 136.6475929054054}">
     </property>
-    <property name="DynamicMapper" class="lsi.noc.application.DynamicMapperPNN">
+    <property name="DynamicMapper" class="lsi.noc.application.DynamicMapperPL">
         <property name="lifelines" class="ptolemy.data.expr.StringParameter" value="MC,ODB,DC,SI,TPC,PHG,IMP,FB1,FB2,RI">
         </property>
         <property name="_location" class="ptolemy.kernel.util.Location" value="[110.0, 245.0]">

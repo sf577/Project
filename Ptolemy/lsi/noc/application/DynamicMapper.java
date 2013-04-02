@@ -211,7 +211,6 @@ public class DynamicMapper extends Attribute {
 	}
 	
 	public void Unmap(Task t){
-		System.out.println("Remove Task "+ t.applicationid + ", "+ t.Id);
 		TaskProducer_.remove(t);
 	}
 	

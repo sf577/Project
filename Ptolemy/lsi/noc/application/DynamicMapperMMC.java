@@ -14,7 +14,7 @@ import ptolemy.kernel.util.IllegalActionException;
 import ptolemy.kernel.util.NameDuplicationException;
 
 @SuppressWarnings("serial")
-public class DynamicMapperMMC extends DynamicMapper {
+public class DynamicMapperMMC extends DynamicMapperNN {
 
 	public DynamicMapperMMC(CompositeEntity container, String name)
 			throws IllegalActionException, NameDuplicationException {
@@ -187,6 +187,7 @@ public class DynamicMapperMMC extends DynamicMapper {
 			throws IllegalActionException, NameDuplicationException {
 		if (com.SourceTask == newTask){
 			performMapping(newTask);
+			return;
 		}
 		List<Producer>producers = this.getproducers_();
 		int amountOfProducers = producers.size();
@@ -196,9 +197,9 @@ public class DynamicMapperMMC extends DynamicMapper {
 			Producer p = producers.get(i);
 			if (!(TaskProducer_.containsValue(p))){
 				if(maxcongestion == 0){
-					maxcongestion = possibleMappingMINMAX(com, p);
+					maxcongestion = possibleMappingCost(com, p);
 					bestmapping = p;
-				} else if (possibleMappingMINMAX(com, p) < maxcongestion){
+				} else if (possibleMappingCost(com, p) < maxcongestion){
 					bestmapping = p;
 				}
 			}
@@ -225,7 +226,7 @@ public class DynamicMapperMMC extends DynamicMapper {
 		}
 	}
 		
-	protected int possibleMappingMINMAX(Communication com, Producer perspectivemapping) throws IllegalActionException{
+	protected int possibleMappingCost(Communication com, Producer perspectivemapping) throws IllegalActionException{
 		List<List<Integer>> indexes = calculateXYpath(TaskProducer_.get(com.SourceTask), perspectivemapping);
 		List<Integer> Hindexes = indexes.get(0);
 		List<Integer> Vindexes = indexes.get(1);
@@ -269,7 +270,7 @@ public class DynamicMapperMMC extends DynamicMapper {
 
 	}
 	
-	private void removeEdgeLoads(Communication com, Producer Source, Producer Destination) throws IllegalActionException {
+	protected void removeEdgeLoads(Communication com, Producer Source, Producer Destination) throws IllegalActionException {
 		List<List<Integer>> indexes = calculateXYpath(Source, Destination);
 		List<Integer> Hindexes = indexes.get(0);
 		List<Integer> Vindexes = indexes.get(1);
