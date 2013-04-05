@@ -31,6 +31,7 @@ import ptolemy.kernel.util.Workspace;
 			
 			public void initialize() throws IllegalActionException {
 				super.initialize();
+				fired = 0;
 				Time timeToStart = getDirector().getModelTime();
 				getDirector().fireAt(this, timeToStart);
 			}
@@ -38,6 +39,7 @@ import ptolemy.kernel.util.Workspace;
 			public void fire() throws IllegalActionException{
 				try {
 					_application.begin();
+					fired++;
 				} catch (NameDuplicationException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -45,8 +47,10 @@ import ptolemy.kernel.util.Workspace;
 			}
 			
 			public boolean postfire() throws IllegalActionException{
-				Time timeToStart = getDirector().getModelTime().add(6000.0);
-				getDirector().fireAt(this, timeToStart);
+				Time timeToStart = getDirector().getModelTime().add(1500.0);
+				if (fired != 33){
+					getDirector().fireAt(this, timeToStart);
+				}
 				return true;
 			}
 			
@@ -59,5 +63,6 @@ import ptolemy.kernel.util.Workspace;
 			}
 
 		Application3 _application;
+		int fired;
 		
 	}

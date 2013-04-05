@@ -1,5 +1,7 @@
 package lsi.noc.application;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
@@ -31,6 +33,13 @@ public class DynamicMapper extends Attribute {
 	public DynamicMapper(CompositeEntity container, String name)
 			throws IllegalActionException, NameDuplicationException {
 		super(container, name);
+		filename = "C://Users/Steven/Desktop/Results/" + this.getClassName() + "Latency.csv";
+		try {
+			output = new FileWriter(filename);
+			output.append("Latency,\n");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	/**
@@ -122,6 +131,10 @@ public class DynamicMapper extends Attribute {
 				
 				MessagesIds_.put(messageID_, com);
 				messageID_ ++;
+			}
+			if (!(mappingQueue.isEmpty())){
+				Communication head = mappingQueue.poll();
+				sendQueuedMessage(head);
 			}
 	}
 	/**
@@ -216,12 +229,20 @@ public class DynamicMapper extends Attribute {
 	
 	protected void write(Communication com, Double time, Double latency) {
 
+		try {
+			output.append(latency + ",\n");
+			output.flush();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
 		String info = com.SourceTask.applicationid + "," + com.SourceTask.Id + "-"
 				+ com.DestTask.applicationid + "," + com.DestTask.Id;
 		System.out.println(info + " " + time + " " + latency);
-	
 	}
 
+	String filename;
+	FileWriter output;
 	protected int xdimension = 3;
 	protected int ydimension = 3;
 	protected List<Producer> producers_;

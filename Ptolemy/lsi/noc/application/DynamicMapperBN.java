@@ -159,7 +159,10 @@ public class DynamicMapperBN extends DynamicMapperPL{
 				MessagesDestinations_.put(com, receiver);
 				messageID_ ++;
 			}
+			if (!(mappingQueue.isEmpty())){
+				Communication head = mappingQueue.poll();
+				sendQueuedMessage(head);
+			}
 	}
-	
-	int lastassignedcluster;
+
 }

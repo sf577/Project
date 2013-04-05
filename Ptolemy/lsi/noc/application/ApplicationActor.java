@@ -30,11 +30,13 @@ public class ApplicationActor extends TypedAtomicActor {
 	
 	public void initialize() throws IllegalActionException {
 		super.initialize();
+		fired = 0;
 		Time timeToStart = getDirector().getModelTime();
 		getDirector().fireAt(this, timeToStart);
 	}
 
 	public void fire() throws IllegalActionException{
+		fired ++;
 		try {
 			_application.begin();
 		} catch (NameDuplicationException e) {
@@ -44,8 +46,10 @@ public class ApplicationActor extends TypedAtomicActor {
 	}
 	
 	public boolean postfire() throws IllegalActionException{
-		Time timeToStart = getDirector().getModelTime().add(5000.0);
-		getDirector().fireAt(this, timeToStart);
+		Time timeToStart = getDirector().getModelTime().add(3000.0);
+		if (fired != 33){
+			getDirector().fireAt(this, timeToStart);
+		}
 		return true;
 	}
 	
@@ -57,5 +61,6 @@ public class ApplicationActor extends TypedAtomicActor {
 		return container.getAttribute("Application");
 	}
 
-Application _application;
+	Application _application;
+	int fired;
 }

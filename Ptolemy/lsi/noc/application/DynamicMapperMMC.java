@@ -121,6 +121,10 @@ public class DynamicMapperMMC extends DynamicMapperNN {
 				MessagesDestinations_.put(com, receiver);
 				messageID_ ++;
 			}
+			if (!(mappingQueue.isEmpty())){
+				Communication head = mappingQueue.poll();
+				sendQueuedMessage(head);
+			}
 	}
 
 	

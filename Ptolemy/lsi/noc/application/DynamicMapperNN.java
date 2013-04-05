@@ -91,6 +91,10 @@ public class DynamicMapperNN extends DynamicMapper {
 				MessagesIds_.put(messageID_, com);
 				messageID_ ++;
 			}
+			if (!(mappingQueue.isEmpty())){
+				Communication head = mappingQueue.poll();
+				sendQueuedMessage(head);
+			}
 	}
 	
 	/**
@@ -136,7 +140,7 @@ public class DynamicMapperNN extends DynamicMapper {
 		//get the list of possible producers
 		producers_ = getproducers_();
 		int amountOfProducers = producers_.size();
-		for (int hopdistance = 0; hopdistance <= 6 && !mapped; hopdistance ++){
+		for (int hopdistance = 0; hopdistance <= (xdimension + ydimension) && !mapped; hopdistance ++){
 			for (int i = 0; i < amountOfProducers && !mapped; i++) {
 				Producer p = (Producer) producers_.get(i);
 				int px = p.getAddressX();
