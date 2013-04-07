@@ -2,70 +2,65 @@ package lsi.noc.application;
 
 import java.util.ArrayList;
 
-import ptolemy.kernel.ComponentEntity;
-import ptolemy.kernel.util.Attribute;
 import ptolemy.kernel.util.IllegalActionException;
 import ptolemy.kernel.util.NameDuplicationException;
-import ptolemy.kernel.util.NamedObj;
 
-@SuppressWarnings("serial")
-public class Application3 extends Attribute {
+public class Application3 {
 
-	public Application3(ComponentEntity container, String name)
-			    throws IllegalActionException, NameDuplicationException {
-			            super(container, name);
-			            _mapper = (DynamicMapper)getMapper(); 
-				    	Tasks = new ArrayList<Task>();
-			            	
-				    		Task t = new Task(0, 3, 1200.0, 128);
-			            	t.addMapper(_mapper);
-			            	Tasks.add(t);
-			            
-			            	t = new Task(1, 3, 1600.0, 256);
-			            	t.addMapper(_mapper);
-			            	Tasks.add(t);
-			            	
-			            	t = new Task(2, 3, 800.0, 128);
-			            	t.addMapper(_mapper);
-			            	Tasks.add(t);
-			            	
-			            	t = new Task(3, 3, 1200.0, 512);
-			            	t.addMapper(_mapper);
-			            	Tasks.add(t);
-			            	
-			            	t = new Task(4, 3, 2000.0, 128);
-			            	t.addMapper(_mapper);
-			            	Tasks.add(t);
-			            	
-			            	t = new Task(5, 3, 2400.0, 1024);
-			            	t.addMapper(_mapper);
-			            	Tasks.add(t);
-			            	
-			            	t = new Task(6, 3, 600.0, 512);
-			            	t.addMapper(_mapper);
-			            	Tasks.add(t);
-			            	
-			            	t = new Task(7, 3, 1200.0, 128);
-			            	t.addMapper(_mapper);
-			            	Tasks.add(t);
-			            	
-			            	t = new Task(8, 3, 1500.0, 512);
-			            	t.addMapper(_mapper);
-			            	Tasks.add(t);
-			            	
-			            	t = new Task(9, 3, 2400.0, 1024);
-			            	t.addMapper(_mapper);
-			            	Tasks.add(t);
-			            	
-			            	t = new Task(10, 3, 2400.0, 1024);
-			            	t.addMapper(_mapper);
-			            	Tasks.add(t);
-			            
-			            initial = Tasks.get(0);
-			            this.setDependancies();
-			    }
+	public Application3(int appid, DynamicMapper _mapper) throws IllegalActionException, NameDuplicationException{
+		Tasks = new ArrayList<Task>();
+		Task t = new Task(0, appid, 1200.0, 128);
+		t.addMapper(_mapper);
+		Tasks.add(t);
+		            
+		t = new Task(1, appid, 1600.0, 256);
+		t.addMapper(_mapper);
+		Tasks.add(t);
+		            	
+		t = new Task(2, appid, 800.0, 128);
+		t.addMapper(_mapper);
+		Tasks.add(t);
+		            	
+		t = new Task(3, appid, 1200.0, 512);
+		t.addMapper(_mapper);
+		Tasks.add(t);
+		            	
+		t = new Task(4, appid, 2000.0, 128);
+		t.addMapper(_mapper);
+		Tasks.add(t);
+		            	
+		t = new Task(5, appid, 2400.0, 1024);
+		t.addMapper(_mapper);
+		Tasks.add(t);
+		            	
+		t = new Task(6, appid, 600.0, 512);
+		t.addMapper(_mapper);
+		Tasks.add(t);
+		            	
+		t = new Task(7, appid, 1200.0, 128);
+		t.addMapper(_mapper);
+		Tasks.add(t);
+		            	
+		t = new Task(8, appid, 1500.0, 512);
+		t.addMapper(_mapper);
+		Tasks.add(t);
+		            	
+		t = new Task(9, appid, 2400.0, 1024);
+		t.addMapper(_mapper);
+		Tasks.add(t);
+		            	
+		t = new Task(10, appid, 2400.0, 1024);
+		t.addMapper(_mapper);
+		Tasks.add(t);
+		            
+		initial = Tasks.get(0);
+		this.setDependancies();
+		System.out.println("Application " + appid+ " Released");
+		appid = appid +3;
+		initial.begin();
+	}
 			    
-			    private void setDependancies() {
+				private void setDependancies() {
 					initial.addcommunication(Tasks.get(1));
 					Tasks.set(0, initial);
 					
@@ -94,22 +89,8 @@ public class Application3 extends Attribute {
 					Tasks.set(6, t);
 					
 				}
-			    
-			    public void begin() throws IllegalActionException, NameDuplicationException {
-						initial.begin();
-					
-				}
-			    
-			    protected Attribute getMapper() throws IllegalActionException,
-				NameDuplicationException {
-
-			    	NamedObj container = getContainer();
-			    	return container.getAttribute("DynamicMapper");
-
-			    }
-			    
+				
 			    Task initial;
-			    DynamicMapper _mapper;
 				ArrayList<Task> Tasks;
-		        
+				
 		}

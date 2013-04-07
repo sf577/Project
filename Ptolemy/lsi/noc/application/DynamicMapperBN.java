@@ -30,8 +30,9 @@ public class DynamicMapperBN extends DynamicMapperPL{
 				stop = true;
 			}
 			if (stop == false){
-				mappedDest = this.checkMapping(com, destination, source);
+				mappedDest = this.checkMapping(com,destination, source);
 				if (mappedDest == false){
+					Unmap(source);
 					stop = true;
 				}
 			}
@@ -58,12 +59,58 @@ public class DynamicMapperBN extends DynamicMapperPL{
 				MessagesDestinations_.put(com, receiver);
 				messageID_ ++;
 			}
+			else{
+				mappingQueue.offer(com);
+			}
 		} else {
 			mappingQueue.offer(com);
-			Communication head = mappingQueue.poll();
+			Communication head = mappingQueue.peek();
 			sendQueuedMessage(head);
 		}
 			
+	}
+	
+	protected void sendQueuedMessage(Communication com) throws IllegalActionException, NameDuplicationException{
+			Task source = com.getSource();
+			Task destination = com.getDest();
+			
+			boolean mappedSource = this.checkMapping(com, source, null);
+			boolean mappedDest = false;
+			boolean stop = false;
+			if (mappedSource == false){
+				stop = true;
+			}
+			if (stop == false){
+				mappedDest = this.checkMapping(com, destination, source);
+				if (mappedDest == false){
+					Unmap(source);
+					stop = true;
+				}
+			}
+			if (stop == false){	
+				mappingQueue.remove();
+				Producer sender = TaskProducer_.get(source);
+				Producer receiver = TaskProducer_.get(destination);
+				
+				int x = receiver.getAddressX();
+				int y = receiver.getAddressY();
+				
+				int totalPacketSize = com.TotalPacketSize;
+				int subPacketSize = com.SubPacketSize;
+				
+				int priority = 1;
+				Token t = new IntToken();
+				
+				Token delay = new DoubleToken(com.PreComptime);
+				
+				sender.sendPacket(t, x, y, messageID_, totalPacketSize, subPacketSize,
+						delay, priority);
+				
+				MessagesIds_.put(messageID_, com);
+				MessagesSources_.put(com, sender);
+				MessagesDestinations_.put(com, receiver);
+				messageID_ ++;
+			}
 	}
 	
 	protected boolean checkMapping(Communication com, Task newTask, Task sourceTask) throws IllegalActionException, NameDuplicationException {
@@ -128,41 +175,4 @@ public class DynamicMapperBN extends DynamicMapperPL{
 			}
 		}
 	}
-
-	protected void sendQueuedMessage(Communication com) throws IllegalActionException, NameDuplicationException{
-			Task source = com.getSource();
-			Task destination = com.getDest();
-			
-			boolean mappedSource = this.checkMapping(com, source, null);
-			boolean mappedDest = this.checkMapping(com, destination, source);
-			if (mappedSource == false || mappedDest == false){
-				mappingQueue.offer(com);
-			} else{		
-				Producer sender = TaskProducer_.get(source);
-				Producer receiver = TaskProducer_.get(destination);
-				
-				int x = receiver.getAddressX();
-				int y = receiver.getAddressY();
-				
-				int totalPacketSize = com.TotalPacketSize;
-				int subPacketSize = com.SubPacketSize;
-				
-				int priority = 1;
-				Token t = new IntToken();
-				
-				Token delay = new DoubleToken(com.PreComptime);
-				sender.sendPacket(t, x, y, messageID_, totalPacketSize, subPacketSize,
-						delay, priority);
-				
-				MessagesIds_.put(messageID_, com);
-				MessagesSources_.put(com, sender);
-				MessagesDestinations_.put(com, receiver);
-				messageID_ ++;
-			}
-			if (!(mappingQueue.isEmpty())){
-				Communication head = mappingQueue.poll();
-				sendQueuedMessage(head);
-			}
-	}
-
 }

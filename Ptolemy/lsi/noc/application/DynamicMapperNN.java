@@ -30,6 +30,7 @@ public class DynamicMapperNN extends DynamicMapper {
 			if (stop == false){
 				mappedDest = this.checkMapping(destination, source);
 				if (mappedDest == false){
+					Unmap(source);
 					stop = true;
 				}
 			}
@@ -54,9 +55,12 @@ public class DynamicMapperNN extends DynamicMapper {
 				MessagesIds_.put(messageID_, com);
 				messageID_ ++;
 			}
+			else{
+				mappingQueue.offer(com);
+			}
 		} else {
 			mappingQueue.offer(com);
-			Communication head = mappingQueue.poll();
+			Communication head = mappingQueue.peek();
 			sendQueuedMessage(head);
 		}
 			
@@ -67,10 +71,20 @@ public class DynamicMapperNN extends DynamicMapper {
 			Task destination = com.getDest();
 			
 			boolean mappedSource = this.checkMapping(source, null);
-			boolean mappedDest = this.checkMapping(destination, source);
-			if (mappedSource == false || mappedDest == false){
-				mappingQueue.offer(com);
-			} else{		
+			boolean mappedDest = false;
+			boolean stop = false;
+			if (mappedSource == false){
+				stop = true;
+			}
+			if (stop == false){
+				mappedDest = this.checkMapping(destination, source);
+				if (mappedDest == false){
+					Unmap(source);
+					stop = true;
+				}
+			}
+			if (stop == false){	
+				mappingQueue.remove();
 				Producer sender = TaskProducer_.get(source);
 				Producer receiver = TaskProducer_.get(destination);
 				
@@ -90,10 +104,6 @@ public class DynamicMapperNN extends DynamicMapper {
 				
 				MessagesIds_.put(messageID_, com);
 				messageID_ ++;
-			}
-			if (!(mappingQueue.isEmpty())){
-				Communication head = mappingQueue.poll();
-				sendQueuedMessage(head);
 			}
 	}
 	

@@ -24,7 +24,8 @@ public class ApplicationActor extends TypedAtomicActor {
 	public ApplicationActor(CompositeEntity container, String name)
 			throws IllegalActionException, NameDuplicationException {
 		super(container, name);
-		_application = (Application)getApplication();
+		mapper = (DynamicMapper)getMapper();
+		appid = 1;
 	}
 	
 	
@@ -36,18 +37,21 @@ public class ApplicationActor extends TypedAtomicActor {
 	}
 
 	public void fire() throws IllegalActionException{
-		fired ++;
-		try {
-			_application.begin();
-		} catch (NameDuplicationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		if (fired < 33 && mapper.numberofapplications() < 5){
+			fired ++;
+			try {
+				new Application(appid, mapper);
+			} catch (NameDuplicationException e) {
+				e.printStackTrace();
+			}
+			appid = appid + 3;
 		}
 	}
 	
 	public boolean postfire() throws IllegalActionException{
-		Time timeToStart = getDirector().getModelTime().add(3000.0);
-		if (fired != 33){
+		Time timeToStart = getDirector().getModelTime().add(400.0);
+		if (fired == 33 && mapper.mappingQueue.isEmpty()){
+		} else{
 			getDirector().fireAt(this, timeToStart);
 		}
 		return true;
@@ -60,7 +64,16 @@ public class ApplicationActor extends TypedAtomicActor {
 
 		return container.getAttribute("Application");
 	}
+	
+    protected Attribute getMapper() throws IllegalActionException,
+	NameDuplicationException {
 
-	Application _application;
+    	NamedObj container = getContainer();
+    	return container.getAttribute("DynamicMapper");
+
+    }
+
+	DynamicMapper mapper;
 	int fired;
+	int appid;
 }

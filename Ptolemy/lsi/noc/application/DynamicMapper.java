@@ -2,6 +2,8 @@ package lsi.noc.application;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
@@ -63,6 +65,7 @@ public class DynamicMapper extends Attribute {
 			if (stop == false){
 				mappedDest = this.checkMapping(destination);
 				if (mappedDest == false){
+					Unmap(source, false);
 					stop = true;
 				}
 			}
@@ -87,9 +90,12 @@ public class DynamicMapper extends Attribute {
 				MessagesIds_.put(messageID_, com);
 				messageID_ ++;
 			}
+			else{
+				mappingQueue.offer(com);
+			}
 		} else {
 			mappingQueue.offer(com);
-			Communication head = mappingQueue.poll();
+			Communication head = mappingQueue.peek();
 			sendQueuedMessage(head);
 		}
 			
@@ -108,10 +114,12 @@ public class DynamicMapper extends Attribute {
 			if (stop == false){
 				mappedDest = this.checkMapping(destination);
 				if (mappedDest == false){
+					Unmap(source, false);
 					stop = true;
 				}
 			}
 			if (stop == false){	
+				mappingQueue.remove();
 				Producer sender = TaskProducer_.get(source);
 				Producer receiver = TaskProducer_.get(destination);
 				
@@ -131,10 +139,6 @@ public class DynamicMapper extends Attribute {
 				
 				MessagesIds_.put(messageID_, com);
 				messageID_ ++;
-			}
-			if (!(mappingQueue.isEmpty())){
-				Communication head = mappingQueue.poll();
-				sendQueuedMessage(head);
 			}
 	}
 	/**
@@ -223,8 +227,12 @@ public class DynamicMapper extends Attribute {
 
 	}
 	
-	public void Unmap(Task t){
+	public void Unmap(Task t, boolean TaskFinished) throws IllegalActionException, NameDuplicationException{
 		TaskProducer_.remove(t);
+		if (!(mappingQueue.isEmpty()) && TaskFinished){
+			Communication head = mappingQueue.peek();
+			sendQueuedMessage(head);
+		}
 	}
 	
 	protected void write(Communication com, Double time, Double latency) {
@@ -239,6 +247,19 @@ public class DynamicMapper extends Attribute {
 		String info = com.SourceTask.applicationid + "," + com.SourceTask.Id + "-"
 				+ com.DestTask.applicationid + "," + com.DestTask.Id;
 		System.out.println(info + " " + time + " " + latency);
+	}
+	
+	public int numberofapplications(){
+		ArrayList<Task> MappedTasks = new ArrayList<Task>(TaskProducer_.keySet());
+		ArrayList<Integer> MappedApplications = new ArrayList<Integer>();;
+		for (int i = 0; i < MappedTasks.size(); i++){
+			int app = MappedTasks.get(i).applicationid;
+			if (!(MappedApplications.contains(app))){
+				MappedApplications.add(app);
+			}
+		}
+		return MappedApplications.size();
+		
 	}
 
 	String filename;

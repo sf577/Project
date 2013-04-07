@@ -38,16 +38,16 @@ public class Task{
 					messagesSent ++;
 				}
 				if (messagesSent == 0){
-					_mapper.Unmap(this);
+					_mapper.Unmap(this, true);
 					begun = false;
 				}
 		}
 	}
 	
-	public void messageRecieved(){
+	public void messageRecieved() throws IllegalActionException, NameDuplicationException{
 		messagesRecieved ++;
 		if (messagesRecieved == messagesSent){
-			_mapper.Unmap(this);
+			_mapper.Unmap(this, true);
 			begun = false;
 		}
 	}

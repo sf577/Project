@@ -25,7 +25,8 @@ import ptolemy.kernel.util.Workspace;
 			public Application3Actor(CompositeEntity container, String name)
 					throws IllegalActionException, NameDuplicationException {
 				super(container, name);
-				_application = (Application3)getApplication();
+				mapper = (DynamicMapper)getMapper();
+				appid = 3;
 			}
 			
 			
@@ -37,12 +38,14 @@ import ptolemy.kernel.util.Workspace;
 			}
 
 			public void fire() throws IllegalActionException{
-				try {
-					_application.begin();
-					fired++;
-				} catch (NameDuplicationException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+				if (fired < 33 && mapper.numberofapplications() < 5){
+					fired ++;
+					try {
+						new Application3(appid, mapper);
+					} catch (NameDuplicationException e) {
+						e.printStackTrace();
+					}
+					appid = appid + 3;
 				}
 			}
 			
@@ -54,15 +57,17 @@ import ptolemy.kernel.util.Workspace;
 				return true;
 			}
 			
-			protected Attribute getApplication() throws IllegalActionException,
+		    protected Attribute getMapper() throws IllegalActionException,
 			NameDuplicationException {
 
-				NamedObj container = getContainer();
+		    	NamedObj container = getContainer();
+		    	return container.getAttribute("DynamicMapper");
 
-				return container.getAttribute("Application3");
-			}
+		    }
 
-		Application3 _application;
+		
+		DynamicMapper mapper;    
 		int fired;
+		int appid;
 		
 	}
