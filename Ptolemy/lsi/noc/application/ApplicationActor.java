@@ -37,7 +37,7 @@ public class ApplicationActor extends TypedAtomicActor {
 	}
 
 	public void fire() throws IllegalActionException{
-		if (fired < 33 && mapper.numberofapplications() < 5){
+		if (fired < 333 && mapper.numberofapplications() < 3){
 			fired ++;
 			try {
 				new Application(appid, mapper);
@@ -49,8 +49,8 @@ public class ApplicationActor extends TypedAtomicActor {
 	}
 	
 	public boolean postfire() throws IllegalActionException{
-		Time timeToStart = getDirector().getModelTime().add(400.0);
-		if (fired == 33 && mapper.mappingQueue.isEmpty()){
+		Time timeToStart = getDirector().getModelTime().add(1800.0);
+		if (fired == 333 && mapper.mappingQueue.isEmpty()){
 		} else{
 			getDirector().fireAt(this, timeToStart);
 		}

@@ -48,7 +48,7 @@ public class DynamicMapperMMC extends DynamicMapperNN {
 			if (stop == false){
 				mappedDest = this.checkMapping(destination, com);
 				if (mappedDest == false){
-					Unmap(source);
+					Unmap(source, false);
 					stop = true;
 				}
 			}
@@ -99,7 +99,7 @@ public class DynamicMapperMMC extends DynamicMapperNN {
 			if (stop == false){
 				mappedDest = this.checkMapping(destination, com);
 				if (mappedDest == false){
-					Unmap(source);
+					Unmap(source, false);
 					stop = true;
 				}
 			}

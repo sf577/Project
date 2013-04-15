@@ -45,11 +45,11 @@ public class Task{
 	}
 	
 	public void messageRecieved() throws IllegalActionException, NameDuplicationException{
-		messagesRecieved ++;
-		if (messagesRecieved == messagesSent){
+		//messagesRecieved ++;
+		//if (messagesRecieved == messagesSent){
 			_mapper.Unmap(this, true);
-			begun = false;
-		}
+		//	begun = false;
+		//}
 	}
 
 	public void addMapper(DynamicMapper mapper) {

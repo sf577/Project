@@ -236,9 +236,9 @@ public class DynamicMapper extends Attribute {
 	}
 	
 	protected void write(Communication com, Double time, Double latency) {
-
+		double nocUtilisation = ((double)TaskProducer_.size()/16.0)*100;
 		try {
-			output.append(latency + ",\n");
+			output.append(latency + " , " + nocUtilisation + ",\n");
 			output.flush();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -251,9 +251,16 @@ public class DynamicMapper extends Attribute {
 	
 	public int numberofapplications(){
 		ArrayList<Task> MappedTasks = new ArrayList<Task>(TaskProducer_.keySet());
-		ArrayList<Integer> MappedApplications = new ArrayList<Integer>();;
+		ArrayList<Integer> MappedApplications = new ArrayList<Integer>();
+		ArrayList<Communication> QueuedApplications = new ArrayList<Communication>(mappingQueue);
 		for (int i = 0; i < MappedTasks.size(); i++){
 			int app = MappedTasks.get(i).applicationid;
+			if (!(MappedApplications.contains(app))){
+				MappedApplications.add(app);
+			}
+		}
+		for (int j = 0; j < QueuedApplications.size(); j++){
+			int app = QueuedApplications.get(j).SourceTask.applicationid;
 			if (!(MappedApplications.contains(app))){
 				MappedApplications.add(app);
 			}

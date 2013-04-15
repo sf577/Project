@@ -9,47 +9,47 @@ public class Application3 {
 
 	public Application3(int appid, DynamicMapper _mapper) throws IllegalActionException, NameDuplicationException{
 		Tasks = new ArrayList<Task>();
-		Task t = new Task(0, appid, 1200.0, 128);
+		Task t = new Task(0, appid, 1200.0, 16);
 		t.addMapper(_mapper);
 		Tasks.add(t);
 		            
-		t = new Task(1, appid, 1600.0, 256);
+		t = new Task(1, appid, 1600.0, 8);
 		t.addMapper(_mapper);
 		Tasks.add(t);
 		            	
-		t = new Task(2, appid, 800.0, 128);
+		t = new Task(2, appid, 800.0, 32);
 		t.addMapper(_mapper);
 		Tasks.add(t);
 		            	
-		t = new Task(3, appid, 1200.0, 512);
+		t = new Task(3, appid, 1200.0, 64);
 		t.addMapper(_mapper);
 		Tasks.add(t);
 		            	
-		t = new Task(4, appid, 2000.0, 128);
+		t = new Task(4, appid, 2000.0, 32);
 		t.addMapper(_mapper);
 		Tasks.add(t);
 		            	
-		t = new Task(5, appid, 2400.0, 1024);
+		t = new Task(5, appid, 2400.0, 64);
 		t.addMapper(_mapper);
 		Tasks.add(t);
 		            	
-		t = new Task(6, appid, 600.0, 512);
+		t = new Task(6, appid, 600.0, 8);
 		t.addMapper(_mapper);
 		Tasks.add(t);
 		            	
-		t = new Task(7, appid, 1200.0, 128);
+		t = new Task(7, appid, 1200.0, 16);
 		t.addMapper(_mapper);
 		Tasks.add(t);
 		            	
-		t = new Task(8, appid, 1500.0, 512);
+		t = new Task(8, appid, 1500.0, 16);
 		t.addMapper(_mapper);
 		Tasks.add(t);
 		            	
-		t = new Task(9, appid, 2400.0, 1024);
+		t = new Task(9, appid, 2400.0, 32);
 		t.addMapper(_mapper);
 		Tasks.add(t);
 		            	
-		t = new Task(10, appid, 2400.0, 1024);
+		t = new Task(10, appid, 2400.0, 64);
 		t.addMapper(_mapper);
 		Tasks.add(t);
 		            

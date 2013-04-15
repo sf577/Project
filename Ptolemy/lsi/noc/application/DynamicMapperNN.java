@@ -30,7 +30,7 @@ public class DynamicMapperNN extends DynamicMapper {
 			if (stop == false){
 				mappedDest = this.checkMapping(destination, source);
 				if (mappedDest == false){
-					Unmap(source);
+					Unmap(source, false);
 					stop = true;
 				}
 			}
@@ -79,7 +79,7 @@ public class DynamicMapperNN extends DynamicMapper {
 			if (stop == false){
 				mappedDest = this.checkMapping(destination, source);
 				if (mappedDest == false){
-					Unmap(source);
+					Unmap(source, false);
 					stop = true;
 				}
 			}

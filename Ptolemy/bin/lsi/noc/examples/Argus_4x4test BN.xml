@@ -26,18 +26,6 @@
         <property name="_location" class="ptolemy.kernel.util.Location" value="[110.0, 245.0]">
         </property>
     </property>
-    <property name="Application" class="lsi.noc.application.Application">
-        <property name="_location" class="ptolemy.kernel.util.Location" value="[445.0, -140.0]">
-        </property>
-    </property>
-    <property name="Application2" class="lsi.noc.application.Application2">
-        <property name="_location" class="ptolemy.kernel.util.Location" value="[710.0, -140.0]">
-        </property>
-    </property>
-    <property name="Application3" class="lsi.noc.application.Application3">
-        <property name="_location" class="ptolemy.kernel.util.Location" value="[970.0, -145.0]">
-        </property>
-    </property>
     <class name="TimedDelay" extends="ptolemy.domains.de.lib.TimedDelay">
         <property name="delay" class="ptolemy.data.expr.Parameter" value="1.0">
         </property>

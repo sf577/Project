@@ -38,7 +38,7 @@ import ptolemy.kernel.util.Workspace;
 			}
 
 			public void fire() throws IllegalActionException{
-				if (fired < 33 && mapper.numberofapplications() < 5){
+				if (fired < 333 && mapper.numberofapplications() < 3){
 					fired ++;
 					try {
 						new Application3(appid, mapper);
@@ -46,12 +46,12 @@ import ptolemy.kernel.util.Workspace;
 						e.printStackTrace();
 					}
 					appid = appid + 3;
-				}
+				} 
 			}
 			
 			public boolean postfire() throws IllegalActionException{
 				Time timeToStart = getDirector().getModelTime().add(1500.0);
-				if (fired != 33){
+				if (fired != 333){
 					getDirector().fireAt(this, timeToStart);
 				}
 				return true;
