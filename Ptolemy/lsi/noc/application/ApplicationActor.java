@@ -1,5 +1,9 @@
 package lsi.noc.application;
 
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.Hashtable;
+
 import ptolemy.actor.TypedAtomicActor;
 import ptolemy.actor.util.Time;
 import ptolemy.kernel.CompositeEntity;
@@ -26,6 +30,13 @@ public class ApplicationActor extends TypedAtomicActor {
 		super(container, name);
 		mapper = (DynamicMapper)getMapper();
 		appid = 1;
+		filename = "C://Users/Steven/Desktop/Results/" + this.getClassName() + " Application Latency.csv";
+		try {
+			output = new FileWriter(filename);
+			output.append("Latency,\n");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	
@@ -37,20 +48,21 @@ public class ApplicationActor extends TypedAtomicActor {
 	}
 
 	public void fire() throws IllegalActionException{
-		if (fired < 333 && mapper.numberofapplications() < 3){
+		if (fired < 33 && mapper.numberofapplications() < 5){
 			fired ++;
 			try {
-				new Application(appid, mapper);
+				new Application1(appid, mapper, this);
+				ApplicationReleaseTime.put(appid, getDirector().getModelTime());
+				appid = appid + 3;
 			} catch (NameDuplicationException e) {
 				e.printStackTrace();
 			}
-			appid = appid + 3;
 		}
 	}
 	
 	public boolean postfire() throws IllegalActionException{
-		Time timeToStart = getDirector().getModelTime().add(1800.0);
-		if (fired == 333 && mapper.mappingQueue.isEmpty()){
+		Time timeToStart = getDirector().getModelTime().add(1000.0*(0.8 + (Math.random()* (1.2-0.8))));
+		if (fired == 33 && mapper.mappingQueue.isEmpty()){
 		} else{
 			getDirector().fireAt(this, timeToStart);
 		}
@@ -72,8 +84,22 @@ public class ApplicationActor extends TypedAtomicActor {
     	return container.getAttribute("DynamicMapper");
 
     }
+    
+    public void ApplicationFinished(int id) {
+		Time applatency = getDirector().getModelTime().subtract(ApplicationReleaseTime.get(id));
+		try {
+			output.append(applatency + " , \n");
+			output.flush();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 
+	String filename;
+	FileWriter output;
 	DynamicMapper mapper;
 	int fired;
 	int appid;
+	protected Hashtable<Integer, Time> ApplicationReleaseTime = new Hashtable<Integer, Time>();
+	
 }

@@ -172,6 +172,7 @@ public class DynamicMapperBN extends DynamicMapperPL{
 			if (bestmapping != null){
 				updateEdgeLoads(com, bestmapping);
 				TaskProducer_.put(newTask, bestmapping);
+				mapped = true;
 			}
 		}
 	}

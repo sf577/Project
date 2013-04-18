@@ -3,7 +3,6 @@ package lsi.noc.application;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Hashtable;
 import java.util.LinkedList;
 import java.util.List;
@@ -88,6 +87,8 @@ public class DynamicMapper extends Attribute {
 						delay, priority);
 				
 				MessagesIds_.put(messageID_, com);
+				MessagesSources_.put(com, sender);
+				MessagesDestinations_.put(com, receiver);
 				messageID_ ++;
 			}
 			else{
@@ -138,6 +139,8 @@ public class DynamicMapper extends Attribute {
 						delay, priority);
 				
 				MessagesIds_.put(messageID_, com);
+				MessagesSources_.put(com, sender);
+				MessagesDestinations_.put(com, receiver);
 				messageID_ ++;
 			}
 	}
@@ -205,9 +208,14 @@ public class DynamicMapper extends Attribute {
 
 		// Getting the message due to the id from the consumer
 		Communication c = MessagesIds_.get(new Integer(id));
-
+		
+		// Writing the messages receive time  and latency to a file
+		 write(c,time.getDoubleValue(), time.subtract(sendTime).getDoubleValue());
+		
 		// No need to store the message with its id in the hashtable any more
 		MessagesIds_.remove(new Integer(id));
+		MessagesSources_.remove(c);
+		MessagesDestinations_.remove(c);
 
 		// Getting the task that "receives" the message
 		Task Source = c.getSource();
@@ -215,8 +223,7 @@ public class DynamicMapper extends Attribute {
 		Task destination = c.getDest();
 		destination.begin();
 		
-		// Writing the messages receive time  and latency to a file
-		 write(c,time.getDoubleValue(), time.subtract(sendTime).getDoubleValue());
+
 
 	}
 	
@@ -235,18 +242,19 @@ public class DynamicMapper extends Attribute {
 		}
 	}
 	
-	protected void write(Communication com, Double time, Double latency) {
+	protected void write(Communication com, Double time, Double latency) throws IllegalActionException {
 		double nocUtilisation = ((double)TaskProducer_.size()/16.0)*100;
+		int sourcex = MessagesSources_.get(com).getAddressX();
+		int sourcey = MessagesSources_.get(com).getAddressY();
+		int destx = MessagesDestinations_.get(com).getAddressX();
+		int desty = MessagesDestinations_.get(com).getAddressY();
+		int hopdistance = ((Math.abs(destx-sourcex) + Math.abs(desty - sourcey)));
 		try {
-			output.append(latency + " , " + nocUtilisation + ",\n");
+			output.append(latency + " , " + nocUtilisation + ", " + hopdistance + ",\n");
 			output.flush();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
-		String info = com.SourceTask.applicationid + "," + com.SourceTask.Id + "-"
-				+ com.DestTask.applicationid + "," + com.DestTask.Id;
-		System.out.println(info + " " + time + " " + latency);
 	}
 	
 	public int numberofapplications(){
@@ -278,4 +286,6 @@ public class DynamicMapper extends Attribute {
 	protected Queue<Communication> mappingQueue = new LinkedList<Communication>();
 	protected Hashtable<Task, Producer> TaskProducer_ = new Hashtable<Task, Producer>();
 	protected Hashtable<Integer, Communication> MessagesIds_ = new Hashtable<Integer, Communication>();
+	protected Hashtable<Communication, Producer> MessagesSources_ = new Hashtable<Communication, Producer>();
+	protected Hashtable<Communication, Producer> MessagesDestinations_ = new Hashtable<Communication, Producer>();
 }

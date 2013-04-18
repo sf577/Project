@@ -5,62 +5,67 @@ import java.util.ArrayList;
 import ptolemy.kernel.util.IllegalActionException;
 import ptolemy.kernel.util.NameDuplicationException;
 
-public class Application2{
+public class Application2 extends Application{
 
-	public Application2(int appid, DynamicMapper _mapper) throws IllegalActionException, NameDuplicationException{
+	public Application2(int appid, DynamicMapper _mapper, Application2Actor Appactor) throws IllegalActionException, NameDuplicationException{
+		AppActor = Appactor;
+		Appid = appid;
 		Tasks = new ArrayList<Task>();
-		Task t = new Task(0, appid, 1200.0, 32);
+		Task t = new Task(0, Appid, this, 1024.0, 256);
     	t.addMapper(_mapper);
     	Tasks.add(t);
     
-    	t = new Task(1, appid, 1600.0, 64);
+    	t = new Task(1, Appid, this, 1024.0, 256);
     	t.addMapper(_mapper);
     	Tasks.add(t);
     	
-    	t = new Task(2, appid, 800.0, 8);
+    	t = new Task(2, Appid, this, 1024.0, 256);
     	t.addMapper(_mapper);
     	Tasks.add(t);
     	
-    	t = new Task(3, appid, 1200.0, 32);
+    	t = new Task(3, Appid, this, 1024.0, 256);
     	t.addMapper(_mapper);
     	Tasks.add(t);
     	
-    	t = new Task(4, appid, 2000.0, 64);
+    	t = new Task(4, Appid, this, 1024.0, 256);
     	t.addMapper(_mapper);
     	Tasks.add(t);
     	
-    	t = new Task(5, appid, 2400.0, 128);
+    	t = new Task(5, Appid, this, 1024.0, 256);
     	t.addMapper(_mapper);
     	Tasks.add(t);
     	
-    	t = new Task(6, appid, 600.0, 64);
+    	t = new Task(6, Appid, this, 1024.0, 256);
     	t.addMapper(_mapper);
     	Tasks.add(t);
     	
-    	t = new Task(7, appid, 1200.0, 32);
+    	t = new Task(7, Appid, this, 1024.0, 256);
     	t.addMapper(_mapper);
     	Tasks.add(t);
     	
-    	t = new Task(8, appid, 1500.0, 128);
+    	t = new Task(8, Appid, this, 1024.0, 256);
     	t.addMapper(_mapper);
     	Tasks.add(t);
     	
-    	t = new Task(9, appid, 2400.0, 8);
+    	t = new Task(9, Appid, this, 1024.0, 256);
     	t.addMapper(_mapper);
     	Tasks.add(t);
     	
-    	t = new Task(10, appid, 2400.0, 32);
+    	t = new Task(10, Appid, this, 1024.0, 256);
     	t.addMapper(_mapper);
     	Tasks.add(t);
     
     	initial = Tasks.get(0);
     	this.setDependancies();
-    	System.out.println("Application " + appid+ " Released");
+    	if (Appid % 10 == 0){
+    		System.out.println("Application " + Appid + " Released");
+    	}
     	appid = appid + 3;
     	initial.begin();	            	
     }
 			    
-			    private void setDependancies() {
+
+				private void setDependancies() {
 					initial.addcommunication(Tasks.get(1));
 					initial.addcommunication(Tasks.get(2));
 					initial.addcommunication(Tasks.get(3));
@@ -90,8 +95,18 @@ public class Application2{
 					
 				}
 			    
+			    public void TaskFinished(){
+			    	tasksfinished ++;
+			    	if (tasksfinished == Tasks.size()){
+			    		AppActor.ApplicationFinished(Appid);
+			    	}
+			    }
+			    
+			    int tasksfinished = 0;
 			    Task initial;
+			    int Appid;
 				ArrayList<Task> Tasks;
+				Application2Actor AppActor;
 
 		        
 		}

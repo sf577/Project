@@ -53,6 +53,8 @@ public class DynamicMapperNN extends DynamicMapper {
 						delay, priority);
 				
 				MessagesIds_.put(messageID_, com);
+				MessagesSources_.put(com, sender);
+				MessagesDestinations_.put(com, receiver);
 				messageID_ ++;
 			}
 			else{
@@ -103,6 +105,8 @@ public class DynamicMapperNN extends DynamicMapper {
 						delay, priority);
 				
 				MessagesIds_.put(messageID_, com);
+				MessagesSources_.put(com, sender);
+				MessagesDestinations_.put(com, receiver);
 				messageID_ ++;
 			}
 	}
@@ -158,7 +162,6 @@ public class DynamicMapperNN extends DynamicMapper {
 				if ((Math.abs(px-sourcex) + Math.abs(py - sourcey)) <= hopdistance){
 					//check if producer is mapped							
 					if(!(TaskProducer_.containsValue(p))){
-						//System.out.println("Map Task "+ newTask.applicationid +","+ newTask.Id +" to " + px + "," + py + " : Hopdistance = "+ Math.abs(((px-sourcex) + (py - sourcey))));
 						TaskProducer_.put(newTask, p);
 						mapped = true;
 					}

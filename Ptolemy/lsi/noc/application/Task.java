@@ -13,8 +13,9 @@ import ptolemy.kernel.util.NameDuplicationException;
 
 public class Task{
 	
-	public Task(int id, int appid, double Computationtime, int Packetsize) throws IllegalActionException, NameDuplicationException{
-        CommunicatesWith = new ArrayList<Task>();
+	public Task(int id, int appid, Application app, double Computationtime, int Packetsize) throws IllegalActionException, NameDuplicationException{
+        App = app;
+		CommunicatesWith = new ArrayList<Task>();
         Id = id;
         applicationid = appid;
         delay = Computationtime;
@@ -33,12 +34,13 @@ public class Task{
 				begun = true;
 				for(int i=0; i < CommunicatesWith.size(); i++){
 					Communication c = new Communication();
-					c.setParameters(this, CommunicatesWith.get(i), packetsize, packetsize, delay);
+					c.setParameters(this, CommunicatesWith.get(i), packetsize, 256, delay);
 					_mapper.sendMessage(c);
 					messagesSent ++;
 				}
 				if (messagesSent == 0){
 					_mapper.Unmap(this, true);
+					App.TaskFinished();
 					begun = false;
 				}
 		}
@@ -48,6 +50,7 @@ public class Task{
 		//messagesRecieved ++;
 		//if (messagesRecieved == messagesSent){
 			_mapper.Unmap(this, true);
+			App.TaskFinished();
 		//	begun = false;
 		//}
 	}
@@ -56,6 +59,7 @@ public class Task{
 		_mapper = mapper;
 	}
 
+	Application App;
 	int Id;
 	int applicationid;
 	double delay;

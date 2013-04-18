@@ -2,7 +2,6 @@ package lsi.noc.application;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Hashtable;
 import java.util.List;
 
 import ptolemy.actor.util.Time;
@@ -260,7 +259,10 @@ public class DynamicMapperMMC extends DynamicMapperNN {
 		Communication c = MessagesIds_.get(new Integer(id));
 		removeEdgeLoads(c, MessagesSources_.get(c), MessagesDestinations_.get(c));
 
-		// No need to store the message with its id in the hashtable any more
+		// Writing the messages receive time  and latency to a file
+		 write(c,time.getDoubleValue(), time.subtract(sendTime).getDoubleValue());
+		
+		 // No need to store the message with its id in the hashtable any more
 		MessagesIds_.remove(new Integer(id));
 		MessagesSources_.remove(c);
 		MessagesDestinations_.remove(c);
@@ -271,8 +273,7 @@ public class DynamicMapperMMC extends DynamicMapperNN {
 		Task destination = c.getDest();
 		destination.begin();
 		
-		// Writing the messages receive time  and latency to a file
-		 write(c,time.getDoubleValue(), time.subtract(sendTime).getDoubleValue());
+		
 
 	}
 	
@@ -294,7 +295,6 @@ public class DynamicMapperMMC extends DynamicMapperNN {
 
 	List<Integer> HorizontalEdgeLoads = new ArrayList<Integer>(12);
 	List<Integer> VerticalEdgeLoads = new ArrayList<Integer>(12);
-	protected Hashtable<Communication, Producer> MessagesSources_ = new Hashtable<Communication, Producer>();
-	protected Hashtable<Communication, Producer> MessagesDestinations_ = new Hashtable<Communication, Producer>();
+	
 }
 
